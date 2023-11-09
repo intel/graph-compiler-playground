@@ -28,17 +28,12 @@ class MLP(Module):
         # y_pred = [batch size, output dim]
         return y_pred, h_2
 
-    def to(self, device: torch.device):
-        self.input_fc = self.input_fc.to(device)
-        self.hidden_fc = self.hidden_fc.to(device)
-        self.output_fc = self.output_fc.to(device)
-        return Module.to(self)
-
 
 class MPLBenchmark(Benchmark):
-    def __init__(self, engine: str):
+    def __init__(self, engine: str, jit: bool):
         model = MLP(INPUT_DIM, OUTPUT_DIM)
         self.model, self.device = select_execution_engine(engine, model)
+        self._jit = jit
 
     def execute(self):
         # model.load_state_dict(torch.load('tut1-model.pt'))
@@ -55,7 +50,10 @@ class MPLBenchmark(Benchmark):
         # construct the model
         with torch.no_grad():
             self.model.eval()
-            fused_model = torch.jit.trace(self.model, rand_inp)
+            if self._jit:
+                fused_model = torch.jit.trace(self.model, rand_inp)
+            else:
+                fused_model = self.model
 
         # print(fused_model)
         fused_model(rand_inp)
