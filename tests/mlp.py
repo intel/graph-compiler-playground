@@ -50,8 +50,14 @@ class MPLBenchmark(Benchmark):
         # construct the model
         with torch.no_grad():
             self.model.eval()
-            if self._jit:
+            if self._jit == "TorchScript":
                 fused_model = torch.jit.trace(self.model, rand_inp)
+            elif self._jit == "IPEX":
+                import intel_extension_for_pytorch
+
+                fused_model = intel_extension_for_pytorch.optimize(self.model)
+            elif self._jit == "Dynamo":
+                fused_model = torch.compile(self.model)
             else:
                 fused_model = self.model
 

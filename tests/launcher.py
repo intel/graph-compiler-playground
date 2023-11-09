@@ -44,7 +44,12 @@ def main():
         "-v", "--verbose", required=False, action="store_true", help="Verbose mode."
     )
     parser.add_argument(
-        "-nj", "--no-jit", required=False, action="store_true", help="Disable pytorch jit."
+        "-j",
+        "--jit",
+        required=False,
+        default="NONE",
+        choices=["NONE", "Dynamo", "TorchScript", "IPEX"],
+        help="JIT compilers.",
     )
     args = parser.parse_args()
 
@@ -53,7 +58,7 @@ def main():
 
     report = OrderedDict()
     for benchmark_mode in args.mode:
-        benchmark = benchmarks_table[benchmark_mode](args.engine, not args.no_jit)
+        benchmark = benchmarks_table[benchmark_mode](args.engine, args.jit)
         start_time = time.time()
         benchmark.execute()
         execution_time = round(time.time() - start_time, 2)
