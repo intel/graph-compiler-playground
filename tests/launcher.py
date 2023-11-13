@@ -23,6 +23,21 @@ def main():
         help="Benchmark mode(s) to run. Default is to run all benchmarks.",
     )
     parser.add_argument(
+        "-inf",
+        "--inference",
+        required=False,
+        default=True,
+        action=argparse.BooleanOptionalAction,
+        help="Run inference.",
+    )
+    parser.add_argument(
+        "--train",
+        required=False,
+        default=False,
+        action=argparse.BooleanOptionalAction,
+        help="Run train.",
+    )
+    parser.add_argument(
         "-e",
         "--engine",
         required=False,
@@ -60,7 +75,7 @@ def main():
     for benchmark_mode in args.mode:
         benchmark = benchmarks_table[benchmark_mode](args.engine, args.jit)
         start_time = time.time()
-        benchmark.execute()
+        benchmark.execute(args.train)
         execution_time = round(time.time() - start_time, 2)
         print(f"Benchmark {benchmark_mode} completed in {execution_time} seconds")
         report[benchmark_mode] = execution_time
@@ -76,8 +91,4 @@ def main():
 
 
 if __name__ == "__main__":
-    import sys
-    from pathlib import Path
-
-    sys.path.append(str(Path(__file__).parent))
     main()

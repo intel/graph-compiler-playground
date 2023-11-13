@@ -9,7 +9,7 @@ class Benchmark(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def execute(self):
+    def execute(self, need_train: bool):
         pass
 
 
@@ -34,19 +34,19 @@ def select_execution_engine(engine: str, model: Module) -> Module:
 
 
 def train(model: Module, device):
-    from ..tools import load_mnist_dataset, train, validate_accuracy
+    from tools import train, validate_accuracy
 
-    epochs = 15
+    epochs = 2
 
     optimizer = torch.optim.Adagrad(model.parameters(), lr=0.01)
     criterion = torch.nn.CrossEntropyLoss()
 
-    train_loader, validation_loader = load_mnist_dataset()
+    train_loader, validation_loader = validate_accuracy.load_mnist_dataset()
 
     lossv, accv = [], []
     dtype = torch.float
     for epoch in range(1, epochs + 1):
-        train(model, dtype, device, criterion, optimizer, epoch)
-        validate_accuracy(
+        train.train(model, dtype, device, train_loader, criterion, optimizer, epoch)
+        validate_accuracy.validate_accuracy(
             model, dtype, criterion, validation_loader, device, lossv, accv
         )

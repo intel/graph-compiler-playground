@@ -18,7 +18,7 @@ def train(
         optimizer.zero_grad()
 
         # Pass data through the network
-        output = model(data)
+        output = model(data)[0]
 
         # Calculate loss
         output = output.type(torch.float)

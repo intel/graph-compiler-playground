@@ -11,20 +11,22 @@ import os
 os.environ["TORCH_LOGS"] = "+dynamo"
 os.environ["TORCHDYNAMO_VERBOSE"] = "1"
 
+# for debug
+# from functorch.compile import draw_graph, make_boxed_func, ts_compile
+# import torch.fx as fx
+# def graph_drawer(name):
+#     def f(fx_g: fx.GraphModule, inps):
+#         draw_graph(fx_g, name)
+#         return fx_g
 
-def graph_drawer(name):
-    def f(fx_g: fx.GraphModule, inps):
-        draw_graph(fx_g, name)
-        return fx_g
-
-    return f
+#     return f
 
 
 @make_simple_dynamo_backend
 def refbackend_torchdynamo_backend(
     fx_graph: torch.fx.GraphModule, example_inputs: List[torch.Tensor]
 ):
-    graph_drawer("mlir_fw")
+    # graph_drawer("mlir_fw")
     mlir_module = torch_mlir.compile(
         fx_graph, example_inputs, output_type="linalg-on-tensors"
     )

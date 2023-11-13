@@ -35,7 +35,7 @@ class MPLBenchmark(Benchmark):
         self.model, self.device = select_execution_engine(engine, model)
         self._jit = jit
 
-    def execute(self):
+    def execute(self, need_train):
         # model.load_state_dict(torch.load('tut1-model.pt'))
 
         # enable oneDNN graph fusion globally
@@ -60,10 +60,10 @@ class MPLBenchmark(Benchmark):
                 compiled_model = torch.compile(self.model)
             elif self._jit == "TorchMLIR":
                 import torch._dynamo as dynamo
-                from dynamo_be import refbackend_torchdynamo_backend
+                from dynamo_be import torch_mlir_be as be
 
                 self.model.train(False)
-                compiled_model = dynamo.optimize(refbackend_torchdynamo_backend)(
+                compiled_model = dynamo.optimize(be.refbackend_torchdynamo_backend)(
                     self.model
                 )
             else:
@@ -76,24 +76,22 @@ class MPLBenchmark(Benchmark):
         with torch.no_grad():
             # oneDNN graph fusion will be triggered during runtime
             output = compiled_model(rand_inp)
-        # Validate on mnist more comlex, there is an error in torch-mlir dyanmo
-        import sys
-        from pathlib import Path
+        if False:
+            # Validate on mnist more comlex, there is an error in torch-mlir dyanmo
+            import tools.validate_accuracy as tva
 
-        sys.path.append(str(Path(__file__).parent))
-        import tools.validate_accuracy as tva
-
-        loss_vector = []
-        accuracy_vector = []
-        criterion = torch.nn.CrossEntropyLoss()
-        tva.validate_accuracy_mnist(
-            compiled_model,
-            torch.float,
-            criterion,
-            self.device,
-            loss_vector,
-            accuracy_vector,
-        )
-        train(compiled_model, self.device)
+            loss_vector = []
+            accuracy_vector = []
+            criterion = torch.nn.CrossEntropyLoss()
+            tva.validate_accuracy_mnist(
+                compiled_model,
+                torch.float,
+                criterion,
+                self.device,
+                loss_vector,
+                accuracy_vector,
+            )
+        if need_train:
+            train(compiled_model, self.device)
 
         print(output)

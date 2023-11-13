@@ -44,10 +44,11 @@ def validate_accuracy(
             # print("data: ", data, " device: ", device)
             data = data.type(dtype)
 
-            output = model(data)
+            output = model(data)[0]
             # print("target: ", target)
             # print("output: ", output)
             output = output.type(torch.float)
+
             val_loss += criterion(output, target).data.item()
             pred = output.data.max(1)[1]  # get the index of the max log-probability
             correct += pred.eq(target.data).cpu().sum()
