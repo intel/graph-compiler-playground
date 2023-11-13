@@ -48,7 +48,7 @@ def main():
         "--jit",
         required=False,
         default="NONE",
-        choices=["NONE", "Dynamo", "TorchScript", "IPEX"],
+        choices=["NONE", "Dynamo", "TorchScript", "IPEX", "TorchMLIR"],
         help="JIT compilers.",
     )
     args = parser.parse_args()
@@ -76,4 +76,8 @@ def main():
 
 
 if __name__ == "__main__":
+    import sys
+    from pathlib import Path
+
+    sys.path.append(str(Path(__file__).parent))
     main()
