@@ -1,0 +1,9 @@
+name: Deploy to x1spr
+
+on:
+  workflow_dispatch:
+
+jobs:
+  mlp_test:
+    uses: ./.github/workflows/mlp-test.yaml
+    
