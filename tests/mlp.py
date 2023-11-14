@@ -95,3 +95,8 @@ class MPLBenchmark(Benchmark):
             train(compiled_model, self.device)
 
         print(output)
+
+        if self.model != compiled_model:
+            import tools.compare as cmp
+            expected = self.model(rand_inp)
+            cmp.compare(expected[0], output[0])
