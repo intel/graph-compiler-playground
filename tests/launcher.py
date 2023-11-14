@@ -62,8 +62,8 @@ def main():
         "-j",
         "--jit",
         required=False,
-        default="NONE",
-        choices=["NONE", "Dynamo", "TorchScript", "IPEX", "TorchMLIR"],
+        default="Vanilla",
+        choices=["Vanilla", "Dynamo", "TorchScript", "TorchScriptOneDNN", "IPEX", "TorchMLIR"],
         help="JIT compilers.",
     )
     args = parser.parse_args()

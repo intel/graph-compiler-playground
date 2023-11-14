@@ -36,13 +36,8 @@ class MPLBenchmark(Benchmark):
         self._jit = jit
 
     def execute(self, need_train):
-        # model.load_state_dict(torch.load('tut1-model.pt'))
-
-        # enable oneDNN graph fusion globally
-        torch.jit.enable_onednn_fusion(True)
-        import os
-
-        os.environ["ONEDNN_GRAPH_DUMP"] = "graph"
+        # import os
+        # os.environ["ONEDNN_GRAPH_DUMP"] = "graph"
         # os.environ["DNNL_VERBOSE"]="1"
         # os.environ["PYTORCH_JIT_LOG_LEVEL"]=">>graph_helper:>>graph_fuser:>>kernel:>>interface"
 
@@ -51,6 +46,10 @@ class MPLBenchmark(Benchmark):
         with torch.no_grad():
             self.model.eval()
             if self._jit == "TorchScript":
+                compiled_model = torch.jit.trace(self.model, rand_inp)
+            if self._jit == "TorchScriptOneDNN":
+                # enable oneDNN graph fusion globally
+                torch.jit.enable_onednn_fusion(True)
                 compiled_model = torch.jit.trace(self.model, rand_inp)
             elif self._jit == "IPEX":
                 import intel_extension_for_pytorch
@@ -68,9 +67,6 @@ class MPLBenchmark(Benchmark):
                 )
             else:
                 compiled_model = self.model
-
-        # print(compiled_model)
-        compiled_model(rand_inp)
 
         # run the model
         with torch.no_grad():
