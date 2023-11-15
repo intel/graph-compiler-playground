@@ -22,7 +22,8 @@ n_chans_out = 10
 size2_struct = [512, 1024, 2048, 512]
 size5_struct = [1024, 4096, 8192, 16384, 8192, 1024, 1024, 256]
 
-name = 'size5_bn_gelu'
+# name = 'size5_bn_gelu'
+name = 'size3'
 
 name2params = {
     'basic': dict(struct=[16, 16]),
@@ -96,40 +97,43 @@ def get_data_loaders(train_batch_size, inf_batch_size):
             'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
     return trainloader, testloader
 
+def get_parser():
+    pass
 
 def main():
     trainloader, testloader = get_data_loaders(train_batch_size=train_batch_size, inf_batch_size=inf_batch_size)
     net = get_mlp(n_chans_in=n_chans_in, name=name)
 
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    # We are not interested in training yet.
+    # criterion = nn.CrossEntropyLoss()
+    # optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
-    epoch_stats = {}
-    n_report = 10
-    for epoch in range(n_epochs):  # loop over the dataset multiple times
-        running_loss = 0.0
+    # epoch_stats = {}
+    # n_report = 10
+    # for epoch in range(n_epochs):  # loop over the dataset multiple times
+    #     running_loss = 0.0
 
-        n_items = 0
-        start = get_time()
-        for i, (x, y) in enumerate(trainloader):
-            optimizer.zero_grad()
+    #     n_items = 0
+    #     start = get_time()
+    #     for i, (x, y) in enumerate(trainloader):
+    #         optimizer.zero_grad()
 
-            outputs = net(x)
-            loss = criterion(outputs, y)
-            loss.backward()
-            optimizer.step()
+    #         outputs = net(x)
+    #         loss = criterion(outputs, y)
+    #         loss.backward()
+    #         optimizer.step()
 
-            n_items += len(x)
+    #         n_items += len(x)
 
-            running_loss += loss.item()
-            if i % n_report == (n_report - 1):
-                print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / n_report:.3f}')
-                running_loss = 0.0
+    #         running_loss += loss.item()
+    #         if i % n_report == (n_report - 1):
+    #             print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / n_report:.3f}')
+    #             running_loss = 0.0
 
-        stop = get_time()
-        print(f"{n_items} took {stop - start}")
+    #     stop = get_time()
+    #     print(f"{n_items} took {stop - start}")
 
-    print('Finished Training')
+    # print('Finished Training')
 
     correct = 0
     total = 0
@@ -149,8 +153,14 @@ def main():
         stop = get_time()
 
     print(f'{n_items} {stop - start}')
+    total_time = stop - start
+    results = {
+        'time': total_time,
+        "throughput": n_items / total_time,
+    }
+    print(results)
 
-    print(f'Accuracy of the network on the 10000 test images: {100 * correct // total} %')
+    # print(f'Accuracy of the network on the 10000 test images: {100 * correct // total} %')
 
 
 if __name__ == '__main__':

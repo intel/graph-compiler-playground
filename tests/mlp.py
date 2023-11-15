@@ -1,8 +1,10 @@
+import time
+
 import torch
 from torch.nn import Module, Linear
 import torch.nn.functional as F
 
-from utils import Benchmark, select_execution_engine, train
+from backend import Backend
 
 HIDDEN_LAYER_DIMS = (250, 100)
 INPUT_DIM = 28 * 28
@@ -29,49 +31,19 @@ class MLP(Module):
         return y_pred, h_2
 
 
-class MPLBenchmark(Benchmark):
-    def __init__(self, engine: str, jit: bool):
+
+class MlpBenchmark:
+    def run(self, backend: Backend, need_train=False):
+        rand_inp = torch.rand(1, 1, 28, 28).to(backend.device)
+
         model = MLP(INPUT_DIM, OUTPUT_DIM)
-        self.model, self.device = select_execution_engine(engine, model)
-        self._jit = jit
 
-    def execute(self, need_train):
-        # import os
-        # os.environ["ONEDNN_GRAPH_DUMP"] = "graph"
-        # os.environ["DNNL_VERBOSE"]="1"
-        # os.environ["PYTORCH_JIT_LOG_LEVEL"]=">>graph_helper:>>graph_fuser:>>kernel:>>interface"
+        compiled_model = backend.prepare_eval_model(model, rand_inp)
 
-        rand_inp = torch.rand(1, 1, 28, 28).to(self.device)
-        # construct the model
         with torch.no_grad():
-            self.model.eval()
-            if self._jit == "TorchScript":
-                compiled_model = torch.jit.trace(self.model, rand_inp)
-            if self._jit == "TorchScriptOneDNN":
-                # enable oneDNN graph fusion globally
-                torch.jit.enable_onednn_fusion(True)
-                compiled_model = torch.jit.trace(self.model, rand_inp)
-            elif self._jit == "IPEX":
-                import intel_extension_for_pytorch
-
-                compiled_model = intel_extension_for_pytorch.optimize(self.model)
-            elif self._jit == "Dynamo":
-                compiled_model = torch.compile(self.model)
-            elif self._jit == "TorchMLIR":
-                import torch._dynamo as dynamo
-                from dynamo_be import torch_mlir_be as be
-
-                self.model.train(False)
-                compiled_model = dynamo.optimize(be.refbackend_torchdynamo_backend)(
-                    self.model
-                )
-            else:
-                compiled_model = self.model
-
-        # run the model
-        with torch.no_grad():
-            # oneDNN graph fusion will be triggered during runtime
+            start_time = time.time()
             output = compiled_model(rand_inp)
+            execution_time = round(time.time() - start_time, 2)
         if False:
             # Validate on mnist more comlex, there is an error in torch-mlir dyanmo
             import tools.validate_accuracy as tva
@@ -83,16 +55,36 @@ class MPLBenchmark(Benchmark):
                 compiled_model,
                 torch.float,
                 criterion,
-                self.device,
+                backend.device,
                 loss_vector,
                 accuracy_vector,
             )
         if need_train:
-            train(compiled_model, self.device)
+            train(compiled_model, backend.device)
 
         print(output)
 
-        if self.model != compiled_model:
+        if model != compiled_model:
             import tools.compare as cmp
-            expected = self.model(rand_inp)
+            expected = model(rand_inp)
             cmp.compare(expected[0], output[0])
+
+        return {'execution_time': execution_time}
+
+def train(model: Module, device):
+    from tools import train, validate_accuracy
+
+    epochs = 2
+
+    optimizer = torch.optim.Adagrad(model.parameters(), lr=0.01)
+    criterion = torch.nn.CrossEntropyLoss()
+
+    train_loader, validation_loader = validate_accuracy.load_mnist_dataset()
+
+    lossv, accv = [], []
+    dtype = torch.float
+    for epoch in range(1, epochs + 1):
+        train.train(model, dtype, device, train_loader, criterion, optimizer, epoch)
+        validate_accuracy.validate_accuracy(
+            model, dtype, criterion, validation_loader, device, lossv, accv
+        )
