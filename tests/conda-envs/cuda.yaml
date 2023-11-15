@@ -1,0 +1,9 @@
+name: cuda-test
+channels:
+  - pytorch
+  - nvidia
+dependencies:
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pytorch-cuda=12.1

@@ -1,0 +1,6 @@
+name: mlir-test
+channels:
+  - intel
+dependencies:
+  - python
+  - pip

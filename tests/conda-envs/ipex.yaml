@@ -1,0 +1,8 @@
+name: ipex-test
+channels:
+  - intel
+dependencies:
+  - intel-aikit-pytorch
+  - datasets
+  - accelerate
+  - sentencepiece

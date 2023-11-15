@@ -1,0 +1,8 @@
+name: cpu-test
+channels:
+  - pytorch
+dependencies:
+  - pytorch
+  - torchvision
+  - torchaudio
+  - cpuonly
