@@ -1,5 +1,13 @@
+import abc
+
 import torch
 from torch.nn import Module
+
+
+class Benchmark(abc.ABC):
+    @abc.abstractmethod
+    def run(self, backend, params):
+        pass
 
 
 class Backend:
@@ -11,10 +19,12 @@ class Backend:
         model.to(self.device)
         with torch.no_grad():
             model.eval()
-            return self._compile_model(self.compile_mode, model, sample_input)
+            return self._compile_model(self.compile_mode, self.device, model, sample_input)
 
     @staticmethod
-    def _compile_model(compile_mode: str, model: Module, sample_input):
+    def _compile_model(compile_mode: str, device, model: Module, sample_input):
+        sample_input = sample_input.to(device)
+
         compile_mode = compile_mode.lower()
         # Empty string means no compilation
         if compile_mode == "":
