@@ -1,52 +1,69 @@
 import abc
+
 import torch
 from torch.nn import Module
 
 
 class Benchmark(abc.ABC):
     @abc.abstractmethod
-    def __init__(self, engine: str):
-        pass
-
-    @abc.abstractmethod
-    def execute(self, need_train: bool):
+    def run(self, backend, params):
         pass
 
 
-def select_execution_engine(engine: str, model: Module) -> Module:
-    if engine == "CPU":
-        device = torch.device("cpu")
-        return model.to(device), device
-    if engine == "IPEX-CPU" or engine == "IPEX-XPU":
-        import intel_extension_for_pytorch
+class Backend:
+    def __init__(self, device, compile_mode) -> None:
+        self.device = self._get_device(device_name=device)
+        self.compile_mode = compile_mode
 
-        device = torch.device("xpu" if engine == "IPEX-XPU" else "cpu")
-        return model.to(device), device
-    elif engine == "CUDA":
-        device = torch.device("cuda")
-        return model.to(device), device
-    elif engine == "OPENVINO-CPU" or engine == "OPENVINO-GPU":
-        from torch_ort import ORTInferenceModule, OpenVINOProviderOptions
+    def prepare_eval_model(self, model, sample_input):
+        model.to(self.device)
+        with torch.no_grad():
+            model.eval()
+            return self._compile_model(self.compile_mode, self.device, model, sample_input)
 
-        pass
-    else:
-        raise ValueError(f"Unknown execution engine {engine}.")
+    @staticmethod
+    def _compile_model(compile_mode: str, device, model: Module, sample_input):
+        sample_input = sample_input.to(device)
 
+        compile_mode = compile_mode.lower()
+        # Empty string means no compilation
+        if compile_mode == "":
+            compiled_model = model
+        elif compile_mode == "torchscript":
+            compiled_model = torch.jit.trace(model, sample_input)
+        elif compile_mode == "torchscript_onednn":
+            # enable oneDNN graph fusion globally
+            torch.jit.enable_onednn_fusion(True)
+            compiled_model = torch.jit.trace(model, sample_input)
+        elif compile_mode == "ipex":
+            import intel_extension_for_pytorch
 
-def train(model: Module, device):
-    from tools import train, validate_accuracy
+            compiled_model = intel_extension_for_pytorch.optimize(model)
+        elif compile_mode == "dynamo":
+            compiled_model = torch.compile(model)
+        elif compile_mode == "torch_mlir":
+            import torch._dynamo as dynamo
+            from dynamo_be import torch_mlir_be as be
 
-    epochs = 2
+            compiled_model = dynamo.optimize(be.refbackend_torchdynamo_backend)(model)
+        else:
+            raise ValueError(f"Unsupported mode {compile_mode}")
 
-    optimizer = torch.optim.Adagrad(model.parameters(), lr=0.01)
-    criterion = torch.nn.CrossEntropyLoss()
+        return compiled_model
 
-    train_loader, validation_loader = validate_accuracy.load_mnist_dataset()
+    @staticmethod
+    def _get_device(device_name):
+        device_name = device_name.lower()
+        # TODO: do we really need this import?
+        if device_name == "xpu":
+            import intel_extension_for_pytorch
 
-    lossv, accv = [], []
-    dtype = torch.float
-    for epoch in range(1, epochs + 1):
-        train.train(model, dtype, device, train_loader, criterion, optimizer, epoch)
-        validate_accuracy.validate_accuracy(
-            model, dtype, criterion, validation_loader, device, lossv, accv
-        )
+        if device_name in ("cpu", "xpu", "cuda"):
+            device = torch.device(device_name)
+            return device
+        elif device_name == "openvino-cpu" or device_name == "openvino-gpu":
+            from torch_ort import ORTInferenceModule, OpenVINOProviderOptions
+
+            raise NotImplementedError("Openvino not ready yet.")
+        else:
+            raise ValueError(f"Unknown execution device {device_name}.")
