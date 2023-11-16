@@ -1,9 +1,37 @@
-name: Deploy to x1spr
+name: Run tests on multiple platforms
 
 on:
-  workflow_dispatch:
+    workflow_dispatch:
 
 jobs:
-  mlp_test:
-    uses: ./.github/workflows/mlp-test.yaml
-    
+    mlp_test:
+        uses: ./.github/workflows/mlp-test.yml
+        strategy:
+            matrix:
+                type: ['cpu', 'ipex', 'mlir']
+                include:
+                  - types: cpu
+                    jit: Vanilla
+                    engine: CPU
+                  - types: cpu
+                    jit: Dynamo
+                    engine: CPU
+                  - types: cpu
+                    jit: TorchScript
+                    engine: CPU
+                  - types: cpu
+                    jit: TorchScriptOneDNN
+                    engine: CPU
+                  - types: ipex
+                    jit: IPEX-CPU
+                    engine: IPEX
+                  - types: ipex
+                    jit: IPEX-XPU
+                    engine: IPEX
+                  - types: mlir
+                    jit: TorchMLIR
+                    engine: CPU
+        with:
+          conda_env: ${{ matrix.type }}
+          jit: ${{ matrix.jit }}
+          engine: ${{ matrix.engine }}

@@ -1,0 +1,28 @@
+name: Run mlp test on requested platforms
+
+on:
+    workflow_call:
+        inputs:
+            conda_env:
+                required: true
+                type: string
+                description: Name of conda env
+            jit:
+                required: true
+                type: string
+                description: Type of JIT to use
+            engine:
+                required: true
+                type: string
+                description: Type of engine to use
+
+jobs:
+    mlp_test:
+        runs-on:
+            - self-hosted
+            - glados
+        steps:
+            - name: Run MLP test
+              run: |
+                  source $CONDA/bin/activate ${{ inputs.conda_env }}
+                  python tests/launcher -m MLP -j ${{ inputs.jit }} -e ${{ inputs.engine }}
