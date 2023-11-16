@@ -1,0 +1,24 @@
+name: Create conda env or requested type
+
+on:
+    workflow_call:
+        inputs:
+            env_type:
+                required: true
+                type: string
+                description: "Type of required conda env: cpu, cuda, ipex or mlir."
+
+jobs:
+    create_env:
+        runs-on:
+            - self-hosted
+            - glados
+        steps:
+            - name: Create standard env
+              if: ${{ inputs.env_type == 'cpu' || inputs.env_type == 'cuda' || inputs.env_type == 'ipex' }}
+              run: |
+                tests/scripts/create-env.sh tests/conda_envs/${{ inputs.env_type }}.yaml
+            - name: Create MLIR env
+              if: ${{ inputs.env_type == 'mlir' }}
+              uses: ./.github/workflows/create_mlir_env.yml
+
