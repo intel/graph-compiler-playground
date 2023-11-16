@@ -1,8 +1,10 @@
 name: ipex-test
 channels:
   - intel
+  - conda-forge
 dependencies:
   - intel-aikit-pytorch
   - datasets
   - accelerate
   - sentencepiece
+

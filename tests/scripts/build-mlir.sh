@@ -4,8 +4,10 @@ if (( $# != 1 )); then
     >&2 echo "Need path to torch-mlir repository as an argument."
 fi
 
-source ${CONDA_PREFIX}/bin/activate mlir-test
+conda activate mlir-test
+
 cd $1
+pip install -r requirements.txt
 
 cmake -GNinja -Bbuild \
   -DCMAKE_BUILD_TYPE=Release \
@@ -16,4 +18,5 @@ cmake -GNinja -Bbuild \
   -DMLIR_ENABLE_BINDINGS_PYTHON=ON \
   -DLLVM_TARGETS_TO_BUILD=host \
   externals/llvm-project/llvm
+
 cmake --build build
