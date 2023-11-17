@@ -1,12 +1,83 @@
 import time
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torchvision
-import torchvision.transforms as transforms
+from torch.utils.data import DataLoader, Dataset
 
 from utils import Backend, Benchmark
+
+
+class RandomClsDataset(Dataset):
+    def __init__(self, n, in_shape, n_classes):
+        super().__init__()
+
+        self.values = np.random.randn(n, *in_shape).astype(np.float32)
+        self.labels = np.random.randint(n_classes, size=(n,))
+
+    def __len__(self):
+        return len(self.values)
+
+    def __getitem__(self, index):
+        return self.values[index], self.labels[index]
+
+
+def get_random_loaders(n, in_shape, n_classes, batch_size, device: str):
+    # This speeds up data copy for cuda devices
+    pin_memory = device == "cuda"
+
+    ds = RandomClsDataset(n, in_shape, n_classes)
+    train_loader = DataLoader(
+        ds, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=pin_memory
+    )
+    test_loader = DataLoader(
+        ds, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=pin_memory
+    )
+    return train_loader, test_loader
+
+
+def get_cifar_loaders(train_batch_size, inf_batch_size):
+    import torchvision
+    import torchvision.transforms as transforms
+
+    n_chans_in = 3072
+    n_chans_out = 10
+
+    transform = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize((0.0, 0.0, 0.0), (1, 1, 1)),
+        ]
+    )
+
+    trainset = torchvision.datasets.CIFAR10(
+        root="./data", train=True, download=True, transform=transform
+    )
+    trainloader = torch.utils.data.DataLoader(
+        trainset, batch_size=train_batch_size, shuffle=True, num_workers=2
+    )
+
+    testset = torchvision.datasets.CIFAR10(
+        root="./data", train=False, download=True, transform=transform
+    )
+    testloader = torch.utils.data.DataLoader(
+        testset, batch_size=inf_batch_size, shuffle=False, num_workers=2
+    )
+
+    classes = (
+        "plane",
+        "car",
+        "bird",
+        "cat",
+        "deer",
+        "dog",
+        "frog",
+        "horse",
+        "ship",
+        "truck",
+    )
+    return trainloader, testloader
 
 
 def get_time():
@@ -14,18 +85,19 @@ def get_time():
 
 
 # PARAMS
-n_epochs = 3
+# Total dataset size
+DATASET_SIZE = 10_000
+N_EPOCHS = 3
 
-train_batch_size = 1024
-inf_batch_size = 1024
 
-n_chans_in = 3072
-n_chans_out = 10
+BATCH_SIZE = 1024
+
+IN_SHAPE = (128,)
+N_CLASSES = 10
 
 size2_struct = [512, 1024, 2048, 512]
 size5_struct = [1024, 4096, 8192, 16384, 8192, 1024, 1024, 256]
 
-# name = 'size5_bn_gelu'
 
 name2params = {
     "basic": dict(struct=[16, 16]),
@@ -39,7 +111,9 @@ name2params = {
     "size2_tanh": dict(struct=size2_struct, activ_layer=nn.Tanh),
     "size2_gelu": dict(struct=size2_struct, activ_layer=nn.GELU),
     "size2_bn": dict(struct=size2_struct, norm_layer=nn.BatchNorm1d),
-    "size5_bn_gelu": dict(struct=size5_struct, norm_layer=nn.BatchNorm1d, activ_layer=nn.GELU),
+    "size5_bn_gelu": dict(
+        struct=size5_struct, norm_layer=nn.BatchNorm1d, activ_layer=nn.GELU
+    ),
 }
 
 
@@ -73,35 +147,24 @@ def build_mlp(
 def get_mlp(n_chans_in, name):
     params = name2params[name]
 
-    net = nn.Sequential(nn.Flatten(), build_mlp(n_chans_in, **params))
+    # net = nn.Sequential(nn.Flatten(), build_mlp(n_chans_in, **params))
+    net = build_mlp(n_chans_in, **params)
     return net
-
-
-def get_data_loaders(train_batch_size, inf_batch_size):
-    transform = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            transforms.Normalize((0.0, 0.0, 0.0), (1, 1, 1)),
-        ]
-    )
-
-    trainset = torchvision.datasets.CIFAR10(root="./data", train=True, download=True, transform=transform)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=train_batch_size, shuffle=True, num_workers=2)
-
-    testset = torchvision.datasets.CIFAR10(root="./data", train=False, download=True, transform=transform)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=inf_batch_size, shuffle=False, num_workers=2)
-
-    classes = ("plane", "car", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck")
-    return trainloader, testloader
 
 
 class MlpBenchmark(Benchmark):
     def run(self, backend: Backend, params):
         name = params.get("name", "size3")
-        trainloader, testloader = get_data_loaders(train_batch_size=train_batch_size, inf_batch_size=inf_batch_size)
-        net = get_mlp(n_chans_in=n_chans_in, name=name)
-        sample = torch.rand(1, n_chans_in)
-        backend.prepare_eval_model(net, sample_input=sample)
+        trainloader, testloader = get_random_loaders(
+            DATASET_SIZE,
+            in_shape=IN_SHAPE,
+            n_classes=N_CLASSES,
+            batch_size=BATCH_SIZE,
+            device=backend.device_name,
+        )
+        net = get_mlp(n_chans_in=IN_SHAPE[0], name=name)
+        sample = torch.rand(1, IN_SHAPE[0])
+        net = backend.prepare_eval_model(net, sample_input=sample)
 
         # We are not interested in training yet.
         # criterion = nn.CrossEntropyLoss()
