@@ -12,6 +12,7 @@ class Benchmark(abc.ABC):
 
 class Backend:
     def __init__(self, device, compile_mode) -> None:
+        self.device_name = device
         self.device = self._get_device(device_name=device)
         self.compile_mode = compile_mode
 
@@ -19,7 +20,9 @@ class Backend:
         model.to(self.device)
         with torch.no_grad():
             model.eval()
-            return self._compile_model(self.compile_mode, self.device, model, sample_input)
+            return self._compile_model(
+                self.compile_mode, self.device, model, sample_input
+            )
 
     @staticmethod
     def _compile_model(compile_mode: str, device, model: Module, sample_input):
@@ -31,21 +34,26 @@ class Backend:
             compiled_model = model
         elif compile_mode == "torchscript":
             compiled_model = torch.jit.trace(model, sample_input)
+            print("Compiled with torchscript")
         elif compile_mode == "torchscript_onednn":
             # enable oneDNN graph fusion globally
             torch.jit.enable_onednn_fusion(True)
             compiled_model = torch.jit.trace(model, sample_input)
+            print("Compiled with torchscript onednn")
         elif compile_mode == "ipex":
             import intel_extension_for_pytorch
 
             compiled_model = intel_extension_for_pytorch.optimize(model)
+            print("Compiled with ipex")
         elif compile_mode == "dynamo":
             compiled_model = torch.compile(model)
+            print("Compiled with dynamo")
         elif compile_mode == "torch_mlir":
             import torch._dynamo as dynamo
             from dynamo_be import torch_mlir_be as be
 
             compiled_model = dynamo.optimize(be.refbackend_torchdynamo_backend)(model)
+            print("Compiled with torch_mlir")
         else:
             raise ValueError(f"Unsupported mode {compile_mode}")
 
