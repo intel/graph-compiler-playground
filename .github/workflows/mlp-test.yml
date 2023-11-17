@@ -22,7 +22,12 @@ jobs:
             - self-hosted
             - glados
         steps:
+            - uses: actions/checkout@v4
+            - uses: ./.github/actions/initial_setup
+              with:
+                  conda_env: ${{ inputs.conda_env }}
             - name: Run MLP test
+              shell: bash -el {0}
               run: |
-                  source $CONDA/bin/activate ${{ inputs.conda_env }}
-                  python tests/launcher -m MLP -j ${{ inputs.jit }} -e ${{ inputs.engine }}
+                  env
+                  python tests/launcher.py -m MLP -j ${{ inputs.jit }} -e ${{ inputs.engine }}

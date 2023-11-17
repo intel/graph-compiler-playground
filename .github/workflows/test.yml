@@ -5,33 +5,33 @@ on:
 
 jobs:
     mlp_test:
-        uses: ./.github/workflows/mlp-test.yml
         strategy:
             matrix:
                 type: ['cpu', 'ipex', 'mlir']
                 include:
-                  - types: cpu
-                    jit: Vanilla
-                    engine: CPU
-                  - types: cpu
-                    jit: Dynamo
-                    engine: CPU
-                  - types: cpu
-                    jit: TorchScript
-                    engine: CPU
-                  - types: cpu
-                    jit: TorchScriptOneDNN
-                    engine: CPU
-                  - types: ipex
-                    jit: IPEX-CPU
-                    engine: IPEX
-                  - types: ipex
-                    jit: IPEX-XPU
-                    engine: IPEX
-                  - types: mlir
-                    jit: TorchMLIR
-                    engine: CPU
+                    - types: cpu
+                      jit: Vanilla
+                      engine: CPU
+                    - types: cpu
+                      jit: Dynamo
+                      engine: CPU
+                    - types: cpu
+                      jit: TorchScript
+                      engine: CPU
+                    - types: cpu
+                      jit: TorchScriptOneDNN
+                      engine: CPU
+                    - types: ipex
+                      jit: IPEX-CPU
+                      engine: IPEX
+                    - types: ipex
+                      jit: IPEX-XPU
+                      engine: IPEX
+                    - types: mlir
+                      jit: TorchMLIR
+                      engine: CPU
+        uses: ./.github/workflows/mlp-test.yml
         with:
-          conda_env: ${{ matrix.type }}
-          jit: ${{ matrix.jit }}
-          engine: ${{ matrix.engine }}
+            conda_env: ${{ matrix.type }}
+            jit: ${{ matrix.jit }}
+            engine: ${{ matrix.engine }}
