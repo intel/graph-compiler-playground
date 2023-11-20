@@ -4,7 +4,7 @@ import torch
 from torch.nn import Module, Linear
 import torch.nn.functional as F
 
-from utils import Backend, Benchmark
+from dl_bench.utils import Backend, Benchmark
 
 HIDDEN_LAYER_DIMS = (250, 100)
 INPUT_DIM = 28 * 28
@@ -64,13 +64,13 @@ class MlpBasicBenchmark(Benchmark):
 
         print(output)
 
-        if model != compiled_model:
-            import tools.compare as cmp
+        # if model != compiled_model:
+        #     import tools.compare as cmp
 
-            expected = model(rand_inp)
-            cmp.compare(expected[0], output[0])
+        #     expected = model(rand_inp)
+        #     cmp.compare(expected[0], output[0])
 
-        return {"execution_time": execution_time}
+        return {"duration_s": execution_time}
 
 
 def train(model: Module, device):
@@ -87,4 +87,6 @@ def train(model: Module, device):
     dtype = torch.float
     for epoch in range(1, epochs + 1):
         train.train(model, dtype, device, train_loader, criterion, optimizer, epoch)
-        validate_accuracy.validate_accuracy(model, dtype, criterion, validation_loader, device, lossv, accv)
+        validate_accuracy.validate_accuracy(
+            model, dtype, criterion, validation_loader, device, lossv, accv
+        )

@@ -1,12 +1,14 @@
-import torch_mlir
-import torch
-from torch_mlir.dynamo import make_simple_dynamo_backend
-from functorch.compile import draw_graph, make_boxed_func
-import torch._dynamo as dynamo
 from typing import List
+import os
+
+import torch
+import torch._dynamo as dynamo
+
+from functorch.compile import draw_graph, make_boxed_func
+import torch_mlir
+from torch_mlir.dynamo import make_simple_dynamo_backend
 from torch_mlir_e2e_test.linalg_on_tensors_backends import refbackend
 
-import os
 
 os.environ["TORCH_LOGS"] = "+dynamo"
 os.environ["TORCHDYNAMO_VERBOSE"] = "1"
@@ -30,7 +32,7 @@ def refbackend_torchdynamo_backend(
     mlir_module = torch_mlir.compile(
         fx_graph, example_inputs, output_type="linalg-on-tensors"
     )
-    print(mlir_module)
+    # print(mlir_module)
     backend = refbackend.RefBackendLinalgOnTensorsBackend()
     compiled = backend.compile(mlir_module)
     loaded = backend.load(compiled)
