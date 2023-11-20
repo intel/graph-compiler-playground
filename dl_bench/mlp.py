@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 
-from utils import Backend, Benchmark
+from dl_bench.utils import Backend, Benchmark, TimerManager
 
 
 class RandomClsDataset(Dataset):
@@ -87,6 +87,7 @@ def get_time():
 # PARAMS
 # Total dataset size
 DATASET_SIZE = 10_000
+# DATASET_SIZE = 2000
 N_EPOCHS = 3
 
 
@@ -114,6 +115,7 @@ name2params = {
     "size5_bn_gelu": dict(
         struct=size5_struct, norm_layer=nn.BatchNorm1d, activ_layer=nn.GELU
     ),
+    "size5_drop_gelu": dict(struct=size5_struct, dropout=0.5, activ_layer=nn.GELU),
 }
 
 
@@ -154,6 +156,8 @@ def get_mlp(n_chans_in, name):
 
 class MlpBenchmark(Benchmark):
     def run(self, backend: Backend, params):
+        tm = TimerManager()
+
         name = params.get("name", "size3")
         trainloader, testloader = get_random_loaders(
             DATASET_SIZE,
@@ -163,8 +167,15 @@ class MlpBenchmark(Benchmark):
             device=backend.device_name,
         )
         net = get_mlp(n_chans_in=IN_SHAPE[0], name=name)
-        sample = torch.rand(1, IN_SHAPE[0])
+        sample = torch.rand(BATCH_SIZE, IN_SHAPE[0])
         net = backend.prepare_eval_model(net, sample_input=sample)
+        print("Warmup started")
+        with torch.no_grad():
+            with tm.timeit("warmup_s"):
+                net(sample)
+                net(sample)
+                net(sample)
+        print("Warmup done")
 
         # We are not interested in training yet.
         # criterion = nn.CrossEntropyLoss()
@@ -204,22 +215,20 @@ class MlpBenchmark(Benchmark):
 
         net.eval()
         with torch.no_grad():
-            start = get_time()
-            for x, y in testloader:
-                outputs = net(x)
-                _, predicted = torch.max(outputs.data, 1)
-                total += y.size(0)
-                correct += (predicted == y).sum().item()
+            with tm.timeit("duration_s"):
+                for x, y in testloader:
+                    outputs = net(x)
+                    _, predicted = torch.max(outputs.data, 1)
+                    total += y.size(0)
+                    correct += (predicted == y).sum().item()
 
-                n_items += len(x)
-            stop = get_time()
+                    n_items += len(x)
 
-        print(f"{n_items} {stop - start}")
-        total_time = stop - start
-        results = {
-            "time": total_time,
-            "samples_per_s": n_items / total_time,
-        }
+        print(f"{n_items} were processed in {tm.name2time['duration_s']}s")
+
+        results = tm.get_results()
+        results['samples_per_s'] = n_items / results['duration_s']
+
         return results
 
         # print(f'Accuracy of the network on the 10000 test images: {100 * correct // total} %')
