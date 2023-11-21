@@ -78,7 +78,7 @@ class Backend:
             print("Compiled with dynamo")
         elif compile_mode == "torch_mlir":
             import torch._dynamo as dynamo
-            from dynamo_be import torch_mlir_be as be
+            from dl_bench.dynamo_be import torch_mlir_be as be
 
             compiled_model = dynamo.optimize(be.refbackend_torchdynamo_backend)(model)
             print("Compiled with torch_mlir")
