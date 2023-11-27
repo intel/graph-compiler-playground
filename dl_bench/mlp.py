@@ -116,6 +116,7 @@ name2params = {
         struct=size5_struct, norm_layer=nn.BatchNorm1d, activ_layer=nn.GELU
     ),
     "size5_drop_gelu": dict(struct=size5_struct, dropout=0.5, activ_layer=nn.GELU),
+    "size6": dict(struct=[8192] * 8),
 }
 
 
@@ -153,6 +154,18 @@ def get_mlp(n_chans_in, name):
     net = build_mlp(n_chans_in, **params)
     return net
 
+def get_macs(model, in_shape, backend):
+    """Calculate MACs, conventional FLOPS = MACs * 2."""
+    from thop import profile
+
+    sample = backend.to_device(torch.rand(1, *in_shape))
+
+    model.eval()
+    with torch.no_grad():
+        macs, params = profile(model, inputs=(sample,), report_missing=True)
+
+    return macs
+
 
 class MlpBenchmark(Benchmark):
     def run(self, backend: Backend, params):
@@ -167,10 +180,13 @@ class MlpBenchmark(Benchmark):
             device=backend.device_name,
         )
         net = get_mlp(n_chans_in=IN_SHAPE[0], name=name)
+        flops_per_sample = get_macs(net, IN_SHAPE, backend) * 2
+
         sample = backend.to_device(torch.rand(BATCH_SIZE, IN_SHAPE[0]))
         net = backend.prepare_eval_model(net, sample_input=sample)
         print("Warmup started")
         with torch.no_grad():
+            net.eval()
             with tm.timeit("warmup_s"):
                 net(sample)
                 net(sample)
@@ -230,6 +246,7 @@ class MlpBenchmark(Benchmark):
 
         results = tm.get_results()
         results["samples_per_s"] = n_items / results["duration_s"]
+        results["flops_per_sample"] = flops_per_sample
 
         return results
 

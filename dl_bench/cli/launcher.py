@@ -106,13 +106,15 @@ def main():
 
     print(f"Benchmark {benchmark_name} completed")
 
+    print("TFLOPS: {:.3}".format(results["flops_per_sample"] * results['samples_per_s'] / (10**12)))
+
     report = {
         "benchmark": benchmark_name,
         "benchmark_desc": benchmark_desc,
         "benchmark_params": benchmark_params,
         "backend_desc": backend_desc,
         "backend_params": backend_params,
-        **{c: results.get(c, 0) for c in ["warmup_s", "duration_s", "samples_per_s"]},
+        **{c: results.get(c, 0) for c in ["warmup_s", "duration_s", "samples_per_s", "flops_per_sample"]},
     }
 
     db = BenchmarkDb(args.url)
