@@ -23,7 +23,7 @@ setup(
         *find_packages(include=["dl_bench"]),
     ],
     install_requires=reqs,
-    python_requires=">=3.10",
+    python_requires=">=3.9",
     entry_points={
         "console_scripts": [
             # "report-xlsx = timedf.scripts.report_xlsx:main",

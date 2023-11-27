@@ -7,3 +7,6 @@ dependencies:
   - torchvision
   - torchaudio
   - pytorch-cuda=12.1
+# The following packages are required to run benchmarks
+  - sqlalchemy
+  - pytest

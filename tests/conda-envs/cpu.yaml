@@ -6,3 +6,6 @@ dependencies:
   - torchvision
   - torchaudio
   - cpuonly
+# The following packages are required to run benchmarks
+  - sqlalchemy
+  - pytest
