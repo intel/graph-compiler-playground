@@ -39,6 +39,8 @@ results_table = Table(
     Column("warmup_s", Float, nullable=False),
     Column("duration_s", Float, nullable=False),
     Column("samples_per_s", Float, nullable=False),
+    # This is actually benchmark property
+    Column("flops_per_sample", Float, nullable=False),
 )
 
 
