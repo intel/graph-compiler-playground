@@ -167,7 +167,7 @@ class MlpBenchmark(Benchmark):
             device=backend.device_name,
         )
         net = get_mlp(n_chans_in=IN_SHAPE[0], name=name)
-        sample = torch.rand(BATCH_SIZE, IN_SHAPE[0])
+        sample = backend.to_device(torch.rand(BATCH_SIZE, IN_SHAPE[0]))
         net = backend.prepare_eval_model(net, sample_input=sample)
         print("Warmup started")
         with torch.no_grad():
@@ -217,6 +217,8 @@ class MlpBenchmark(Benchmark):
         with torch.no_grad():
             with tm.timeit("duration_s"):
                 for x, y in testloader:
+                    x = backend.to_device(x)
+                    y = backend.to_device(y)
                     outputs = net(x)
                     _, predicted = torch.max(outputs.data, 1)
                     total += y.size(0)
@@ -227,7 +229,7 @@ class MlpBenchmark(Benchmark):
         print(f"{n_items} were processed in {tm.name2time['duration_s']}s")
 
         results = tm.get_results()
-        results['samples_per_s'] = n_items / results['duration_s']
+        results["samples_per_s"] = n_items / results["duration_s"]
 
         return results
 

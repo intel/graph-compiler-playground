@@ -27,6 +27,7 @@ def recursively_convert_to_numpy(o: Any):
         return o
     raise Exception(f"Unexpected Python function input: {o}")
 
+
 def recursively_convert_from_numpy(o: Any):
     if isinstance(o, np.ndarray):
         return torch.from_numpy(o)
@@ -46,7 +47,6 @@ def recursively_convert_from_numpy(o: Any):
     raise Exception(f"Unexpected Python function output: {o}")
 
 
-
 def refine_result_type(_result):
     if isinstance(_result, tuple):
         return tuple(refine_result_type(x) for x in _result)
@@ -56,6 +56,7 @@ def refine_result_type(_result):
         return _result
     else:
         raise ValueError(f"Unhandled return type {type(_result)}")
+
 
 class TimerManager:
     def __init__(self):
@@ -93,6 +94,16 @@ class Backend:
         self.device_name = device
         self.device = self._get_device(device_name=device)
         self.compile_mode = compiler
+
+    def to_device(self, x: torch.Tensor):
+        if self.device_name == "cuda":
+            return x.to(self.device)
+        elif self.device_name == "xpu":
+            raise NotImplementedError("xpu have no to_device impl yet.")
+        elif self.device_name == "cpu":
+            return x
+        else:
+            raise ValueError("Unknown device")
 
     def prepare_eval_model(self, model, sample_input):
         model.to(self.device)
@@ -138,20 +149,29 @@ class Backend:
             from torch_mlir._dynamo_fx_importer import import_fx_graph_as_func
             from torch_mlir_e2e_test.configs.torchdynamo import jit
             from torch_mlir_e2e_test.framework import TestOptions
+
             # from torch_mlir_e2e_test.linalg_on_tensors_backends.refbackend import RefBackendLinalgOnTensorsBackend
-            from torch_mlir_e2e_test.linalg_on_tensors_backends.cpuprotobackend import CpuProtoLinalgOnTensorsBackend
+            from torch_mlir_e2e_test.linalg_on_tensors_backends.cpuprotobackend import (
+                CpuProtoLinalgOnTensorsBackend,
+            )
             import torch.utils._pytree as pytree
 
             opts = TestOptions()
-            module = jit(model, [sample_input], 'test_name', opts, output_type="linalg-on-tensors")
+            module = jit(
+                model,
+                [sample_input],
+                "test_name",
+                opts,
+                output_type="linalg-on-tensors",
+            )
             backend = CpuProtoLinalgOnTensorsBackend(opts)
             # backend = RefBackendLinalgOnTensorsBackend()
             module = backend.compile(module)
             backend_module = backend.load(module)
 
             params = {
-                    **dict(model.named_parameters(remove_duplicate=False)),
-                    **dict(model.named_buffers(remove_duplicate=False)),
+                **dict(model.named_parameters(remove_duplicate=False)),
+                **dict(model.named_buffers(remove_duplicate=False)),
             }
             params_flat, params_spec = pytree.tree_flatten(params)
             params_flat = list(params_flat)
@@ -159,8 +179,9 @@ class Backend:
             class result:
                 def __call__(self, *args):
                     numpy_inputs = recursively_convert_to_numpy(params_flat + [*args])
-                    return refine_result_type(getattr(backend_module,
-                            model.__class__.__name__)(*numpy_inputs))
+                    return refine_result_type(
+                        getattr(backend_module, model.__class__.__name__)(*numpy_inputs)
+                    )
 
                 def eval(self):
                     pass
