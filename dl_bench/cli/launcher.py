@@ -106,7 +106,6 @@ def main():
 
     print(f"Benchmark {benchmark_name} completed")
 
-    print("TFLOPS: {:.3}".format(results["flops_per_sample"] * results['samples_per_s'] / (10**12)))
 
     report = {
         "benchmark": benchmark_name,
@@ -121,6 +120,7 @@ def main():
 
     if args.verbose:
         print("Report:")
+        print("TFLOPS: {:.3}".format(results.get("flops_per_sample", 0) * results.get('samples_per_s', 0) / (10**12)))
         pprint.pprint(report)
 
     if args.output is not None:
