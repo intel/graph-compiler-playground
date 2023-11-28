@@ -86,7 +86,7 @@ def get_time():
 
 # PARAMS
 # Total dataset size
-DATASET_SIZE = 10_000
+DATASET_SIZE = 10_240
 # DATASET_SIZE = 2000
 N_EPOCHS = 3
 

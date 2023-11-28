@@ -156,7 +156,10 @@ class Backend:
             )
             import torch.utils._pytree as pytree
 
-            opts = TestOptions()
+#            debug_timer seems to cause problems:
+#            TypeError: TestOptions.__init__() got an unexpected keyword argument 'debug_timer'
+#            opts = TestOptions(debug_timer=False, use_kernels=True)
+            opts = TestOptions(use_kernels=True)
             module = jit(
                 model,
                 [sample_input],
