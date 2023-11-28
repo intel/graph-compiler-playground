@@ -31,4 +31,4 @@ jobs:
             - name: Run MLP test on specific compiler
               shell: bash -el {0}
               run: |
-                  benchmark-run -c ${{ inputs.compiler }} -d ${{ inputs.device }} -b mlp -p "name='size2'" -v
+                  benchmark-run -c "${{ inputs.compiler }}" -d ${{ inputs.device }} -b mlp -p "name='size2'" -v
