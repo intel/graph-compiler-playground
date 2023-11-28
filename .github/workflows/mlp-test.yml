@@ -32,10 +32,3 @@ jobs:
               shell: bash -el {0}
               run: |
                   benchmark-run -c ${{ inputs.compiler }} -d ${{ inputs.device }} -b mlp -p "name='size2'" -v
-              if: ${{ inputs.compiler != 'Vanilla'}}
-
-            - name: Run MLP test on default compiler
-              shell: bash -el {0}
-              run: |
-                  benchmark-run -d ${{ inputs.device }} -b mlp -p "name='size2'" -v
-              if: ${{ inputs.compiler == 'Vanilla'}}
