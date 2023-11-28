@@ -23,4 +23,5 @@ runs:
           run: |
               source /opt/intel/oneapi/setvars.sh
               tests/scripts/build-mlir.sh torch-mlir
-              echo PYTHONPATH=`pwd`/torch-mlir/build/tools/torch-mlir/python_packages/torch_mlir:`pwd`/torch-mlir/examples >> $GITHUB_ENV
+              echo PYTHONPATH=`pwd`/torch-mlir/build/tools/torch-mlir/python_packages/torch_mlir:`pwd`/torch-mlir/examples:$PYTHONPATH >> $GITHUB_ENV
+              echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH >> $GITHUB_ENV
