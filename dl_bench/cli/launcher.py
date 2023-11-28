@@ -63,6 +63,11 @@ def parse_args():
         ],
         help="Compilation mode to use. No compilation by default.",
     )
+    parser.add_argument(
+        "--host",
+        default="",
+        help="Name of the host machine",
+    )
 
     parser.add_argument(
         "-u",
@@ -97,10 +102,13 @@ def main():
     benchmark_desc = args.benchmark_desc or f"{benchmark_name}_{args.benchmark_params}"
     benchmark_params = parse_benchmark_params(args.benchmark_params)
 
-    backend_params = {"device": args.device, "compiler": args.compiler}
-    backend_desc = args.backend_desc or f"{args.device}_{args.compiler}"
+    device = args.device
+    compiler = args.compiler
+    host = args.host
+    backend_desc = args.backend_desc or f"{args.host}_{args.device}_{args.compiler}"
 
-    backend = Backend(**backend_params)
+
+    backend = Backend(device=device, compiler=compiler)
     benchmark = benchmarks_table[benchmark_name]()
     results = benchmark.run(backend=backend, params=benchmark_params)
 
@@ -112,7 +120,9 @@ def main():
         "benchmark_desc": benchmark_desc,
         "benchmark_params": benchmark_params,
         "backend_desc": backend_desc,
-        "backend_params": backend_params,
+        "host": host,
+        "device": device,
+        "compiler": compiler,
         **{c: results.get(c, 0) for c in ["warmup_s", "duration_s", "samples_per_s", "flops_per_sample"]},
     }
 

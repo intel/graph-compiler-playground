@@ -34,7 +34,9 @@ results_table = Table(
     Column("benchmark_params", JSON, nullable=False),
     # Backend info
     make_string("backend_desc"),
-    Column("backend_params", JSON, nullable=False),
+    make_string("host"),
+    make_string("device"),
+    make_string("compiler"),
     # Results
     Column("warmup_s", Float, nullable=False),
     Column("duration_s", Float, nullable=False),
