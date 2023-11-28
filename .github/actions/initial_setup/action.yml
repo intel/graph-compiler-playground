@@ -6,6 +6,10 @@ inputs:
         required: true
         type: string
         description: Name of conda env
+    compiler:
+        required: true
+        type: string
+        description: Compiler used for execution
 
 runs:
     using: composite
@@ -17,5 +21,21 @@ runs:
               use-mamba: true
               environment-file: tests/conda-envs/${{ inputs.conda_env }}.yaml
               activate-environment: ${{ inputs.conda_env }}-test
+
         - uses: ./.github/actions/build_mlir
           if: ${{ inputs.conda_env == 'mlir' }}
+
+        - name: Install compiler for dynamo
+          shell: bash -el {0}
+          run: |
+              sudo apt-get update
+              sudo apt-get install -y build-essential
+          if: ${{ inputs.compiler == 'dynamo' }}
+
+        - name: Setup benchmarks package
+          shell: bash -el {0}
+          run: |
+              echo BENCHMARK SETUP
+              pip install -e .
+              conda list
+              pip list

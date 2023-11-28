@@ -7,11 +7,11 @@ on:
                 required: true
                 type: string
                 description: Name of conda env
-            jit:
+            compiler:
                 required: true
                 type: string
                 description: Type of JIT to use
-            engine:
+            device:
                 required: true
                 type: string
                 description: Type of engine to use
@@ -26,8 +26,16 @@ jobs:
             - uses: ./.github/actions/initial_setup
               with:
                   conda_env: ${{ inputs.conda_env }}
-            - name: Run MLP test
+                  compiler: ${{ inputs.compiler }}
+
+            - name: Run MLP test on specific compiler
               shell: bash -el {0}
               run: |
-                  env
-                  python tests/launcher.py -m MLP -j ${{ inputs.jit }} -e ${{ inputs.engine }}
+                  benchmark-run -c ${{ inputs.compiler }} -d ${{ inputs.device }} -b mlp -p "name='size2'" -v
+              if: ${{ inputs.compiler != 'Vanilla'}}
+
+            - name: Run MLP test on default compiler
+              shell: bash -el {0}
+              run: |
+                  benchmark-run -d ${{ inputs.device }} -b mlp -p "name='size2'" -v
+              if: ${{ inputs.compiler == 'Vanilla'}}

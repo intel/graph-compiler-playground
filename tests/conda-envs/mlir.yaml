@@ -4,3 +4,6 @@ channels:
 dependencies:
   - python
   - pip
+# The following packages are required to run benchmarks
+  - sqlalchemy
+  - pytest
