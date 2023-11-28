@@ -156,7 +156,7 @@ class Backend:
             )
             import torch.utils._pytree as pytree
 
-            opts = TestOptions()
+            opts = TestOptions(debug_timer=False, use_kernels=True)
             module = jit(
                 model,
                 [sample_input],
