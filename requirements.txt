@@ -2,3 +2,4 @@
 # torchvision
 sqlalchemy
 thop
+mysql-connector-python
