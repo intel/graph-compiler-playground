@@ -37,6 +37,8 @@ jobs:
             - name: Run MLP test on specific compiler
               shell: bash -el {0}
               run: |
+                  env
                   source /opt/intel/oneapi/setvars.sh
+                  env
                   benchmark-run -c "${{ inputs.compiler }}" -d ${{ inputs.device }} -b mlp -p "name='size2'" -v
               if: ${{ inputs.compiler == 'torch_mlir' }}
