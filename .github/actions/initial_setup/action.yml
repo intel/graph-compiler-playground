@@ -35,7 +35,4 @@ runs:
         - name: Setup benchmarks package
           shell: bash -el {0}
           run: |
-              echo BENCHMARK SETUP
               pip install -e .
-              conda list
-              pip list
