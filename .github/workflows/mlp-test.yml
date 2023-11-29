@@ -44,8 +44,8 @@ jobs:
                   benchmark-run \
                     --host spr \
                     --benchmark mlp \
-                    -p "name='${{ strategy.bname }}'"
-                    --backend_desc "${{ strategy.bname }}" \
+                    -p "name='${{ matrix.bname }}'"
+                    --backend_desc "${{ matrix.bname }}" \
                     --compiler "${{ inputs.compiler }}" \
                     --device ${{ inputs.device }} \
                     -v --url ${{ secrets.DB_URL }}
