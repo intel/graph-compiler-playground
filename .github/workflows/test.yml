@@ -21,3 +21,5 @@ jobs:
             conda_env: ${{ matrix.type.env }}
             compiler: ${{ matrix.type.compiler }}
             device: ${{ matrix.type.device }}
+        secrets:
+            DB_URL: ${{ secrets.DB_URL }}
