@@ -36,3 +36,4 @@ runs:
           shell: bash -el {0}
           run: |
               pip install -e .
+              conda list
