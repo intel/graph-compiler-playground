@@ -41,10 +41,11 @@ jobs:
             - name: Run MLP test on specific compiler
               shell: bash -el {0}
               run: |
-                  benchmark-run --host spr \
-                    -b mlp \
+                  benchmark-run \
+                    --host spr \
+                    --benchmark mlp \
                     -p "name='${{ strategy.bname }}'"
-                    -bd "${{ strategy.bname }}" \
-                    -c "${{ inputs.compiler }}" \
-                    -d ${{ inputs.device }} \
+                    --backend_desc "${{ strategy.bname }}" \
+                    --compiler "${{ inputs.compiler }}" \
+                    --device ${{ inputs.device }} \
                     -v --url ${{ secrets.DB_URL }}
