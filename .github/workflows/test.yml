@@ -13,7 +13,7 @@ jobs:
                   {env: 'cpu', device: 'cpu', compiler: 'torchscript'},
                   {env: 'cpu', device: 'cpu', compiler: 'torchscript_onednn'},
                   {env: 'ipex', device: 'cpu', compiler: 'ipex'},
-#                  {env: 'ipex', device: 'xpu', compiler: 'ipex'},
+                  {env: 'ipex', device: 'xpu', compiler: 'ipex'},
                   {env: 'mlir', device: 'cpu', compiler: 'torch_mlir'}
                 ]
         uses: ./.github/workflows/mlp-test.yml

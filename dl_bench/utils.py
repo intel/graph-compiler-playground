@@ -99,7 +99,7 @@ class Backend:
         if self.device_name == "cuda":
             return x.to(self.device)
         elif self.device_name == "xpu":
-            raise NotImplementedError("xpu have no to_device impl yet.")
+            return x.to(self.device)
         elif self.device_name == "cpu":
             return x
         else:

@@ -160,6 +160,7 @@ def get_macs(model, in_shape, backend):
 
     sample = backend.to_device(torch.rand(1, *in_shape))
 
+    model = backend.to_device(model)
     model.eval()
     with torch.no_grad():
         macs, params = profile(model, inputs=(sample,), report_missing=True)
