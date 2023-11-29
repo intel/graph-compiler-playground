@@ -45,7 +45,7 @@ jobs:
                     --host spr \
                     --benchmark mlp \
                     -p "name='${{ matrix.bname }}'" \
-                    --backend_desc "${{ matrix.bname }}" \
+                    --benchmark_desc "${{ matrix.bname }}" \
                     --compiler "${{ inputs.compiler }}" \
                     --device ${{ inputs.device }} \
                     -v --url ${{ secrets.DB_URL }}
