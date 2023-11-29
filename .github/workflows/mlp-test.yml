@@ -15,12 +15,22 @@ on:
                 required: true
                 type: string
                 description: Type of engine to use
+        secrets:
+            DB_URL:
+                required: true
 
 jobs:
     mlp_test:
         runs-on:
             - self-hosted
             - glados
+        strategy:
+            matrix:
+                bname:
+                    - size2
+                    - size3
+                    - size4
+                    - size5
         steps:
             - uses: actions/checkout@v4
             - uses: ./.github/actions/initial_setup
@@ -31,4 +41,10 @@ jobs:
             - name: Run MLP test on specific compiler
               shell: bash -el {0}
               run: |
-                  benchmark-run -c "${{ inputs.compiler }}" -d ${{ inputs.device }} -b mlp -p "name='size2'" -v
+                  benchmark-run --host spr \
+                    -b mlp \
+                    -p "name='${{ strategy.bname }}'"
+                    -bd "${{ strategy.bname }}" \
+                    -c "${{ inputs.compiler }}" \
+                    -d ${{ inputs.device }} \
+                    -v --url ${{ secrets.DB_URL }}
