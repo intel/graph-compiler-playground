@@ -26,6 +26,8 @@ jobs:
             - self-hosted
             - glados
         steps:
+            - uses: actions/checkout@v4
+
             - name: Build mlir and upload to artifact storage
               uses: ./.github/actions/build_mlir
 
@@ -42,7 +44,6 @@ jobs:
                     - size4
                     - size5
         steps:
-            - uses: actions/checkout@v4
             - uses: ./.github/actions/initial_setup
               with:
                   conda_env: ${{ inputs.conda_env }}
