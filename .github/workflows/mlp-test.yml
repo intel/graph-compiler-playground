@@ -47,7 +47,7 @@ jobs:
                     - 1024
                 include:
                     - {bname: 'size5', batch_size: 1}
-                    - {name: 'size5', batch_size: 16}
+                    - {bname: 'size5', batch_size: 16}
                     - {bname: 'size5', batch_size: 256}
                     - {bname: 'size5', batch_size: 2048}
                     - {bname: 'size5', batch_size: 8196}
@@ -65,7 +65,7 @@ jobs:
                     --host spr \
                     --benchmark mlp \
                     -p "name='${{ matrix.bname }}',batch_size=${{ matrix.batch_size }}" \
-                    --backend_desc "${{ matrix.bname }}_bs${{ matrix.batch_size }}" \
+                    --benchmark_desc "${{ matrix.bname }}_bs${{ matrix.batch_size }}" \
                     --compiler "${{ inputs.compiler }}" \
                     --device ${{ inputs.device }} \
                     -v --url ${{ secrets.DB_URL }}
