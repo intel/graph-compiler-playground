@@ -86,15 +86,11 @@ def get_time():
 
 
 # PARAMS
-N_EPOCHS = 3
-
-
-
 IN_FEAT = 128
 N_CLASSES = 10
 
 size2_struct = [512, 1024, 2048, 512]
-# TODO: why 8192 to 1024, need to make more gradual
+# TODO: why 8192 to 1024, need to make more gradual, update while we recalc on cuda & amd
 size5_struct = [1024, 4096, 8192, 16384, 8192, 1024, 1024, 256]
 
 
@@ -115,9 +111,15 @@ name2params = {
         struct=size5_struct, norm_layer=nn.BatchNorm1d, activ_layer=nn.GELU
     ),
     "size5_drop_gelu": dict(struct=size5_struct, dropout=0.5, activ_layer=nn.GELU),
-    "25@512": dict(struct=[512] * 25),
     "100@512": dict(struct=[512] * 100),
-    "8@16384": dict(struct=[16384] * 10),
+    # "100@512": dict(struct=[512] * 100),
+    "25@1024": dict(struct=[1024] * 25),
+    "4@16384": dict(struct=[16384] * 4),
+    "2@16384": dict(struct=[16384] * 2),
+}
+
+name2bs = {
+
 }
 
 
@@ -174,8 +176,10 @@ class MlpBenchmark(Benchmark):
     def run(self, backend: Backend, params):
         tm = TimerManager()
 
-        name = params.get("name", "size3")
-        batch_size = params.get("batch_size", 1024)
+        # PARAMS
+        name = params.get("name", "size5")
+        batch_size = int(params.get("batch_size", 1024))
+
         # Do early stopping once we hit min_batches & min_seconds to accelerate measurement
         min_batches = 10
         min_seconds = 10
@@ -206,6 +210,7 @@ class MlpBenchmark(Benchmark):
         # criterion = nn.CrossEntropyLoss()
         # optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
+        # N_EPOCHS = 3
         # epoch_stats = {}
         # n_report = 10
         # for epoch in range(n_epochs):  # loop over the dataset multiple times
