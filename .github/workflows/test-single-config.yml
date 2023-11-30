@@ -1,0 +1,45 @@
+name: Run MLP test in one configuration
+
+on:
+    workflow_dispatch:
+        inputs:
+            env:
+                description: Conda env to use to run the test
+                required: true
+                default: mlir
+                type: choice
+                options:
+                    - mlir
+                    - cpu
+                    - ipex
+                    - cuda
+            device:
+                description: Device to use to execute the test
+                required: true
+                default: cpu
+                type: choice
+                options:
+                    - cpu
+                    - xpu
+                    - cuda
+            compiler:
+                description: JIT compiler to use to execute the test
+                required: true
+                default: torch_mlir
+                type: choice
+                options:
+                    - dynamo
+                    - torchscript
+                    - torchscript_onednn
+                    - ipex
+                    - torch_mlir
+
+jobs:
+    mlp_test:
+        uses: ./.github/workflows/mlp-test.yml
+        with:
+            conda_env: ${{ inputs.env }}
+            compiler: ${{ inputs.compiler }}
+            device: ${{ inputs.device }}
+        secrets:
+            DB_URL: ${{ secrets.DB_URL }}
