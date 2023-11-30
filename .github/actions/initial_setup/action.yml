@@ -11,15 +11,30 @@ inputs:
         type: string
         description: Compiler used for execution
 
+env:
+    conda_yaml_fille: tests/conda-envs/${{ inputs.conda_env }}.yaml
+
 runs:
     using: composite
     steps:
+        - name: Get Date
+          id: get-date
+          run: echo "today=$(/bin/date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
+          shell: bash
+
+        - name: Restore Conda env cache
+          id: conda-cache
+          uses: actions/cache@v3
+          with:
+            path: ${{ conda_yaml_fille }}
+            key: conda-${{ inputs.conda_env }}-${{ hashFiles(conda_yaml_fille) }}-${{ steps.get-date.outputs.today }}
+
         - uses: conda-incubator/setup-miniconda@v2
           with:
-              miniconda-version: "latest"
+              miniforge-variant: Mambaforge
               auto-update-conda: true
               use-mamba: true
-              environment-file: tests/conda-envs/${{ inputs.conda_env }}.yaml
+              environment-file: ${{ conda_yaml_fille }}
               activate-environment: ${{ inputs.conda_env }}-test
 
         - uses: ./.github/actions/build_mlir
