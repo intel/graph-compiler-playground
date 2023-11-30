@@ -65,7 +65,7 @@ jobs:
                   benchmark-run \
                     --host spr \
                     --benchmark mlp \
-                    -p "name='${{ matrix.bname }}',batch_size=${{ matrix.batch_size }}"
+                    -p "name='${{ matrix.bname }}',batch_size=${{ matrix.batch_size }}" \
                     --backend_desc "${{ matrix.bname }}_bs${{ matrix.batch_size }}" \
                     --compiler "${{ inputs.compiler }}" \
                     --device ${{ inputs.device }} \
