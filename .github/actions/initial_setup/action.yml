@@ -12,11 +12,19 @@ inputs:
         description: Compiler used for execution
 
 env:
-    conda_yaml_fille: tests/conda-envs/${{ inputs.conda_env }}.yaml
+    CONDA_YAML_FILE: tests/conda-envs/${{ inputs.conda_env }}.yaml
+    CONDA_ENV_NAME: ${{ inputs.conda_env }}-test
 
 runs:
     using: composite
     steps:
+        - uses: conda-incubator/setup-miniconda@v2
+          with:
+              miniforge-variant: Mambaforge
+              miniforge-version: latest
+              use-mamba: true
+              activate-environment: ${{ env.CONDA_ENV_NAME }}
+
         - name: Get Date
           id: get-date
           run: echo "today=$(/bin/date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
@@ -25,18 +33,16 @@ runs:
         - name: Restore Conda env cache
           id: conda-cache
           uses: actions/cache@v3
+          env:
+              # Increase this value to reset cache if etc/example-environment.yml has not changed
+              CACHE_NUMBER: 0
           with:
-            path: ${{ conda_yaml_fille }}
-            key: conda-${{ inputs.conda_env }}-${{ hashFiles(conda_yaml_fille) }}-${{ steps.get-date.outputs.today }}
+              path: ${{ env.CONDA }}/envs
+              key: conda-${{ inputs.conda_env }}-${{ hashFiles(env.CONDA_YAML_FILE) }}-${{ steps.get-date.outputs.today }}-${{ env.CACHE_NUMBER }}
 
-        - uses: conda-incubator/setup-miniconda@v2
+        - name: Update conda env
           if: steps.conda-cache.outputs.cache-hit != 'true'
-          with:
-              miniforge-variant: Mambaforge
-              auto-update-conda: true
-              use-mamba: true
-              environment-file: ${{ conda_yaml_fille }}
-              activate-environment: ${{ inputs.conda_env }}-test
+          run: mamba env update -n ${{ env.CONDA_ENV_NAME }} -f ${{ env.CONDA_YAML_FILE }}
 
         - uses: ./.github/actions/build_mlir
           if: ${{ inputs.conda_env == 'mlir' }}
@@ -50,5 +56,4 @@ runs:
 
         - name: Setup benchmarks package
           shell: bash -el {0}
-          run: |
-              pip install -e .
+          run: pip install -e .
