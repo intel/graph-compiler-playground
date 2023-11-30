@@ -30,6 +30,7 @@ runs:
             key: conda-${{ inputs.conda_env }}-${{ hashFiles(conda_yaml_fille) }}-${{ steps.get-date.outputs.today }}
 
         - uses: conda-incubator/setup-miniconda@v2
+          if: steps.conda-cache.outputs.cache-hit != 'true'
           with:
               miniforge-variant: Mambaforge
               auto-update-conda: true
