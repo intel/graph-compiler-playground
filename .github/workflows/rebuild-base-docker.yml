@@ -1,0 +1,45 @@
+name: Rebuild base docker image for runners
+
+on:
+  workflow_dispatch:
+    inputs:
+      push:
+        description: Push image to DockerHub
+        required: true
+        type: choice
+        options:
+          - false
+          - true
+        default: "false"
+
+env:
+  DOCKER_BUILD_ARGS: --build-arg http_proxy --build-arg https_proxy
+
+jobs:
+  build:
+    runs-on:
+      - self-hosted
+      - glados
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build image graph-compiler-playground/actions-runner
+        run: |
+          cd tests/docker
+          docker build . \
+            $DOCKER_BUILD_ARGS \
+            --progress=plain \
+            --tag graph-compiler-playground/actions-runner
+
+      - name: Login to Docker Hub
+        if: ${{ inputs.push == 'true' }}
+        run: docker login --username "${{ vars.DOCKERHUB_USERNAME }}" --password "${{ secrets.DOCKERHUB_PASSWORD }}"
+
+      - name: Push image pbchekin/icl-jupyterhub:${{ inputs.tag }}
+        if: ${{ inputs.push == 'true' }}
+        run: docker push pbchekin/icl-jupyterhub:${{ inputs.tag }}
+
+      - name: Push image pbchekin/icl-jupyterhub-gpu:${{ inputs.tag }}
+        if: ${{ inputs.push == 'true' }}
+        run: docker push pbchekin/icl-jupyterhub-gpu:${{ inputs.tag }}
