@@ -11,6 +11,7 @@ runs:
               path: torch-mlir
               ref: 'cpu-proto'
               submodules: recursive
+
         - name: Install system and Intel packages
           shell: bash -el {0}
           run: |
@@ -18,6 +19,7 @@ runs:
               echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
               sudo apt-get update
               sudo apt-get install -y build-essential intel-basekit
+
         - name: Build torch-mlir
           shell: bash -el {0}
           run: |
@@ -25,3 +27,9 @@ runs:
               tests/scripts/build-mlir.sh torch-mlir
               echo PYTHONPATH=`pwd`/torch-mlir/build/tools/torch-mlir/python_packages/torch_mlir:`pwd`/torch-mlir/examples:$PYTHONPATH >> $GITHUB_ENV
               echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH >> $GITHUB_ENV
+
+        - name: Upload built mlir
+          uses: actions/upload-artifact@v3
+              name: torch-mlir-binary
+              path: torch-mlir/
+              if-no-files-found: error

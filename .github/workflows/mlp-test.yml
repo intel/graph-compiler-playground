@@ -20,10 +20,20 @@ on:
                 required: true
 
 jobs:
+    build_mlir:
+        if: ${{ inputs.conda_env == 'mlir' }}
+        runs-on:
+            - self-hosted
+            - glados
+        steps:
+            - name: Build mlir and upload to artifact storage
+              uses: ./.github/actions/build_mlir
+
     mlp_test:
         runs-on:
             - self-hosted
             - glados
+        needs: build_mlir
         strategy:
             matrix:
                 bname:

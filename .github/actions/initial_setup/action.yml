@@ -45,7 +45,10 @@ runs:
           shell: bash -el {0}
           run: mamba env update -n ${{ inputs.conda_env }}-test -f tests/conda-envs/${{ inputs.conda_env }}.yaml
 
-        - uses: ./.github/actions/build_mlir
+        - name: Download mlir that was built in previous job
+          uses: actions/download-artifact@v3
+              name: torch-mlir-binary
+              path: torch-mlir
           if: ${{ inputs.conda_env == 'mlir' }}
 
         - name: Install compiler for dynamo
