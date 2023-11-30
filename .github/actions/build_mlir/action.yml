@@ -30,6 +30,7 @@ runs:
 
         - name: Upload built mlir
           uses: actions/upload-artifact@v3
+          with:
               name: torch-mlir-binary
               path: torch-mlir/
               if-no-files-found: error

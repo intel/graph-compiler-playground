@@ -41,12 +41,13 @@ runs:
                   ${{ env.CACHE_NUMBER }}
 
         - name: Update conda env
-          if: steps.conda-cache.outputs.cache-hit != 'true'
           shell: bash -el {0}
           run: mamba env update -n ${{ inputs.conda_env }}-test -f tests/conda-envs/${{ inputs.conda_env }}.yaml
+          if: steps.conda-cache.outputs.cache-hit != 'true'
 
         - name: Download mlir that was built in previous job
           uses: actions/download-artifact@v3
+          with:
               name: torch-mlir-binary
               path: torch-mlir
           if: ${{ inputs.conda_env == 'mlir' }}
