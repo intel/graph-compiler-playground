@@ -4,6 +4,8 @@ if (( $# != 1 )); then
     >&2 echo "Need path to torch-mlir repository as an argument."
 fi
 
+# The following line is needed to make conda activate take effect after it is executed
+eval "$(conda shell.bash hook)"
 ${CONDA}/bin/conda activate mlir
 
 env
