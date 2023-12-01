@@ -1,0 +1,36 @@
+name: Rebuild base docker image for runners
+
+on:
+  workflow_dispatch:
+    inputs:
+      push:
+        description: Push image to DockerHub
+        required: true
+        type: choice
+        options:
+          - false
+          - true
+        default: "false"
+
+env:
+  DOCKER_REGISTRY: docker-registry.docker-registry.svc.cluster.local:5000
+
+jobs:
+  build:
+    runs-on:
+      - self-hosted
+      - glados
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build image ${{ env.DOCKER_REGISTRY }}/graph-compiler-playground-actions-runner
+        run: |
+          cd tests/docker
+          docker build . \
+            --progress=plain \
+            --tag ${{ env.DOCKER_REGISTRY }}/graph-compiler-playground-actions-runner
+
+      - name: Push image ${{ env.DOCKER_REGISTRY }}/graph-compiler-playground-actions-runner
+        if: ${{ inputs.push == 'true' }}
+        run: docker push ${{ env.DOCKER_REGISTRY }}/graph-compiler-playground-actions-runner
