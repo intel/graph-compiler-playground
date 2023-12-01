@@ -28,7 +28,6 @@ jobs:
         run: |
           cd tests/docker
           docker build . \
-            --progress=plain \
             --tag ${{ env.DOCKER_REGISTRY }}/graph-compiler-playground-actions-runner
 
       - name: Push image ${{ env.DOCKER_REGISTRY }}/graph-compiler-playground-actions-runner
