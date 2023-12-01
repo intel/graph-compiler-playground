@@ -24,7 +24,7 @@ runs:
           uses: actions/cache@v3
           env:
               # Increase this value to reset cache if etc/example-environment.yml has not changed
-              CACHE_NUMBER: 1
+              CACHE_NUMBER: 2
           with:
               path: ${{ env.CONDA }}/envs
               key: >-
@@ -36,7 +36,7 @@ runs:
         - name: Update conda env
           if: steps.conda-cache.outputs.cache-hit != 'true'
           shell: bash -el {0}
-          run: ${CONDA}/bin/conda env update -n ${{ inputs.conda_env }} -f tests/conda-envs/${{ inputs.conda_env }}.yaml
+          run: ${CONDA}/bin/conda env update --solver libmamba -n ${{ inputs.conda_env }} -f tests/conda-envs/${{ inputs.conda_env }}.yaml
 
         - uses: ./.github/actions/build_mlir
           if: ${{ inputs.conda_env == 'mlir' }}
