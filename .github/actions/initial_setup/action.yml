@@ -44,5 +44,5 @@ runs:
         - name: Setup benchmarks package
           shell: bash -el {0}
           run: |
-              ${CONDA}/bin/conda activate ${{ inputs.conda_env }}
+              source ${CONDA}/bin/activate ${{ inputs.conda_env }}
               pip install -e .
