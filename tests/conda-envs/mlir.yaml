@@ -1,4 +1,4 @@
-name: mlir-test
+name: mlir
 channels:
   - intel
 dependencies:

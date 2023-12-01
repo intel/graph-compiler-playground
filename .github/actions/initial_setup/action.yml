@@ -14,13 +14,6 @@ inputs:
 runs:
     using: composite
     steps:
-        - uses: conda-incubator/setup-miniconda@v2
-          with:
-              miniforge-variant: Mambaforge
-              miniforge-version: latest
-              use-mamba: true
-              activate-environment: ${{ inputs.conda_env }}-test
-
         - name: Get Date
           id: get-date
           run: echo "today=$(/bin/date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
@@ -31,7 +24,7 @@ runs:
           uses: actions/cache@v3
           env:
               # Increase this value to reset cache if etc/example-environment.yml has not changed
-              CACHE_NUMBER: 0
+              CACHE_NUMBER: 2
           with:
               path: ${{ env.CONDA }}/envs
               key: >-
@@ -43,18 +36,13 @@ runs:
         - name: Update conda env
           if: steps.conda-cache.outputs.cache-hit != 'true'
           shell: bash -el {0}
-          run: mamba env update -n ${{ inputs.conda_env }}-test -f tests/conda-envs/${{ inputs.conda_env }}.yaml
+          run: ${CONDA}/bin/conda env update --solver libmamba -n ${{ inputs.conda_env }} -f tests/conda-envs/${{ inputs.conda_env }}.yaml
 
         - uses: ./.github/actions/build_mlir
           if: ${{ inputs.conda_env == 'mlir' }}
 
-        - name: Install compiler for dynamo
-          shell: bash -el {0}
-          run: |
-              sudo apt-get update
-              sudo apt-get install -y build-essential
-          if: ${{ inputs.compiler == 'dynamo' }}
-
         - name: Setup benchmarks package
           shell: bash -el {0}
-          run: pip install -e .
+          run: |
+              source ${CONDA}/bin/activate ${{ inputs.conda_env }}
+              pip install -e .
