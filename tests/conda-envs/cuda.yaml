@@ -1,4 +1,4 @@
-name: cuda-test
+name: cuda
 channels:
   - pytorch
   - nvidia
