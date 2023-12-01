@@ -6,6 +6,9 @@ fi
 
 ${CONDA}/bin/conda activate mlir
 
+env
+conda list
+
 cd $1
 pip install -r requirements.txt
 
