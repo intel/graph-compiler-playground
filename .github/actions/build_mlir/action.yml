@@ -9,7 +9,7 @@ runs:
           with:
               repository: intel-ai/torch-mlir
               path: torch-mlir
-              ref: 'cpu-proto'
+              ref: 'dmitriim/fix_mm_arg'
               submodules: recursive
         - name: Build torch-mlir
           shell: bash -el {0}
