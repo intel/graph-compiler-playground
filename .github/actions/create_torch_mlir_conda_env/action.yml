@@ -9,6 +9,7 @@ inputs:
 
 runs:
     using: composite
+    steps:
         - name: Checkout torch-mlir repo
           uses: actions/checkout@v4
           with:
