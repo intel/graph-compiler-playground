@@ -16,6 +16,7 @@ jobs:
 #                  {env: 'ipex', device: 'xpu', compiler: 'ipex'},
                   {env: 'mlir', device: 'cpu', compiler: 'torch_mlir'}
                 ]
+            fail-fast: false
         uses: ./.github/workflows/mlp-test.yml
         with:
             conda_env: ${{ matrix.type.env }}

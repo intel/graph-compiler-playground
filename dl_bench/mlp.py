@@ -1,4 +1,5 @@
 import time
+from typing import List
 
 import numpy as np
 import torch
@@ -85,18 +86,11 @@ def get_time():
 
 
 # PARAMS
-# Total dataset size
-DATASET_SIZE = 10_240
-# DATASET_SIZE = 2000
-N_EPOCHS = 3
-
-
-BATCH_SIZE = 1024
-
-IN_SHAPE = (128,)
+IN_FEAT = 128
 N_CLASSES = 10
 
 size2_struct = [512, 1024, 2048, 512]
+# TODO: why 8192 to 1024, need to make more gradual, update while we recalc on cuda & amd
 size5_struct = [1024, 4096, 8192, 16384, 8192, 1024, 1024, 256]
 
 
@@ -107,22 +101,32 @@ name2params = {
     "size3": dict(struct=[512, 1024, 4096, 2048, 512]),
     "size4": dict(struct=[1024, 4096, 8192, 4096, 1024, 256]),
     "size5": dict(struct=size5_struct),
-    "size2_inplace": dict(struct=size2_struct, inplace=True),
-    "size2_sigm": dict(struct=size2_struct, activ_layer=nn.Sigmoid),
-    "size2_tanh": dict(struct=size2_struct, activ_layer=nn.Tanh),
-    "size2_gelu": dict(struct=size2_struct, activ_layer=nn.GELU),
-    "size2_bn": dict(struct=size2_struct, norm_layer=nn.BatchNorm1d),
+    "size5_sigm": dict(struct=size5_struct, activ_layer=nn.Sigmoid),
+    "size5_tanh": dict(struct=size5_struct, activ_layer=nn.Tanh),
+    "size5_gelu": dict(struct=size5_struct, activ_layer=nn.GELU),
+    "size5_linear": dict(struct=size5_struct, activ_layer=None),
+    "size5_inplace": dict(struct=size5_struct, inplace=True),
+    "size5_bn": dict(struct=size5_struct, norm_layer=nn.BatchNorm1d),
     "size5_bn_gelu": dict(
         struct=size5_struct, norm_layer=nn.BatchNorm1d, activ_layer=nn.GELU
     ),
     "size5_drop_gelu": dict(struct=size5_struct, dropout=0.5, activ_layer=nn.GELU),
-    "size6": dict(struct=[8192] * 8),
+    "100@512": dict(struct=[512] * 100),
+    # "100@512": dict(struct=[512] * 100),
+    "25@1024": dict(struct=[1024] * 25),
+    "4@16384": dict(struct=[16384] * 4),
+    "2@16384": dict(struct=[16384] * 2),
+}
+
+name2bs = {
+
 }
 
 
 def build_mlp(
     n_chans_in: int,
-    struct,
+    n_chans_out: int,
+    struct: List[int],
     norm_layer=None,
     activ_layer=nn.ReLU,
     inplace=None,
@@ -133,25 +137,26 @@ def build_mlp(
 
     layers = []
     in_dim = n_chans_in
-    for hidden_dim in struct[:-1]:
+    for hidden_dim in struct:
         layers.append(torch.nn.Linear(in_dim, hidden_dim, bias=bias))
         if norm_layer is not None:
             layers.append(norm_layer(hidden_dim))
-        layers.append(activ_layer(**params))
+        if activ_layer is not None:
+            layers.append(activ_layer(**params))
         if dropout is not None:
             layers.append(torch.nn.Dropout(dropout, **params))
         in_dim = hidden_dim
 
-    layers.append(torch.nn.Linear(in_dim, struct[-1], bias=True))
+    layers.append(torch.nn.Linear(in_dim, n_chans_out, bias=True))
 
     return nn.Sequential(*layers)
 
 
-def get_mlp(n_chans_in, name):
+def get_mlp(n_chans_in, n_chans_out, name):
     params = name2params[name]
 
     # net = nn.Sequential(nn.Flatten(), build_mlp(n_chans_in, **params))
-    net = build_mlp(n_chans_in, **params)
+    net = build_mlp(n_chans_in, **params, n_chans_out=n_chans_out)
     return net
 
 def get_macs(model, in_shape, backend):
@@ -171,18 +176,26 @@ class MlpBenchmark(Benchmark):
     def run(self, backend: Backend, params):
         tm = TimerManager()
 
-        name = params.get("name", "size3")
+        # PARAMS
+        name = params.get("name", "size5")
+        batch_size = int(params.get("batch_size", 1024))
+
+        # Do early stopping once we hit min_batches & min_seconds to accelerate measurement
+        min_batches = 10
+        min_seconds = 10
+        DATASET_SIZE = max(10_240, batch_size * min_batches)
+
         trainloader, testloader = get_random_loaders(
             DATASET_SIZE,
-            in_shape=IN_SHAPE,
+            in_shape=(IN_FEAT,),
             n_classes=N_CLASSES,
-            batch_size=BATCH_SIZE,
+            batch_size=batch_size,
             device=backend.device_name,
         )
-        net = get_mlp(n_chans_in=IN_SHAPE[0], name=name)
-        flops_per_sample = get_macs(net, IN_SHAPE, backend) * 2
+        net = get_mlp(n_chans_in=IN_FEAT, n_chans_out=N_CLASSES, name=name)
+        flops_per_sample = get_macs(net, (IN_FEAT,), backend) * 2
 
-        sample = backend.to_device(torch.rand(BATCH_SIZE, IN_SHAPE[0]))
+        sample = backend.to_device(torch.rand(batch_size, IN_FEAT))
         net = backend.prepare_eval_model(net, sample_input=sample)
         print("Warmup started")
         with torch.no_grad():
@@ -197,6 +210,7 @@ class MlpBenchmark(Benchmark):
         # criterion = nn.CrossEntropyLoss()
         # optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
+        # N_EPOCHS = 3
         # epoch_stats = {}
         # n_report = 10
         # for epoch in range(n_epochs):  # loop over the dataset multiple times
@@ -226,11 +240,11 @@ class MlpBenchmark(Benchmark):
 
         correct = 0
         total = 0
-
         n_items = 0
 
         net.eval()
         with torch.no_grad():
+            start = time.perf_counter()
             with tm.timeit("duration_s"):
                 for x, y in testloader:
                     x = backend.to_device(x)
@@ -241,6 +255,10 @@ class MlpBenchmark(Benchmark):
                     correct += (predicted == y).sum().item()
 
                     n_items += len(x)
+
+                    # early stopping
+                    if (time.perf_counter() - start) > min_seconds and n_items > batch_size * min_batches:
+                        break
 
         print(f"{n_items} were processed in {tm.name2time['duration_s']}s")
 
