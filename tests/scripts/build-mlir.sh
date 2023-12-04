@@ -6,9 +6,6 @@ fi
 
 source ${CONDA}/bin/activate mlir
 
-env
-${CONDA}/bin/conda list
-
 cd $1
 pip install -r requirements.txt
 

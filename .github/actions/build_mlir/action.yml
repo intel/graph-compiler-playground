@@ -1,21 +1,54 @@
 name: Build torch-mlir
 description: Checkout torch-mlir repo and build it in mlir-test conda env
 
+inputs:
+    conda_env:
+        required: true
+        type: string
+        description: Name of torch-mlir conda env
+
 runs:
     using: composite
     steps:
-        - name: Checkout torch-mlir repo
-          uses: actions/checkout@v4
+        - name: Get Date
+          id: get-date
+          run: echo "today=$(/bin/date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
+          shell: bash
+
+        - name: Restore Conda env cache
+          id: conda-cache
+          uses: actions/cache@v3
+          env:
+              # Increase this value to reset cache if etc/example-environment.yml has not changed
+              CACHE_NUMBER: 2
           with:
-              repository: intel-ai/torch-mlir
-              path: torch-mlir
-              ref: 'cpu-proto'
-              submodules: recursive
+              path: ${{ env.CONDA }}/envs
+              key: >-
+                  conda-${{ inputs.conda_env }}-
+                  ${{ hashFiles(format('tests/conda-envs/{0}.yaml', inputs.conda_env)) }}-
+                  ${{ steps.get-date.outputs.today }}-
+                  ${{ env.CACHE_NUMBER }}
+
+        - name: Update conda env for torch-mlir env
+          if: steps.conda-cache.outputs.cache-hit != 'true'
+          uses: ./.github/actions/create_torch_mlir_conda_env
+          with:
+              conda_env: $${{ inputs.conda_env }}
+
         - name: Build torch-mlir
           shell: bash -el {0}
           run: |
+              source ${CONDA}/bin/activate ${{ inputs.conda_env }}
               source /opt/intel/oneapi/setvars.sh
-              tests/scripts/build-mlir.sh torch-mlir
+              cmake -GNinja -Bbuild \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DPython3_FIND_VIRTUALENV=ONLY \
+                -DLLVM_ENABLE_PROJECTS=mlir \
+                -DLLVM_EXTERNAL_PROJECTS="torch-mlir" \
+                -DLLVM_EXTERNAL_TORCH_MLIR_SOURCE_DIR="$PWD" \
+                -DMLIR_ENABLE_BINDINGS_PYTHON=ON \
+                -DLLVM_TARGETS_TO_BUILD=host \
+                externals/llvm-project/llvm
               echo PYTHONPATH=`pwd`/torch-mlir/build/tools/torch-mlir/python_packages/torch_mlir:`pwd`/torch-mlir/examples:$PYTHONPATH >> $GITHUB_ENV
               echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH >> $GITHUB_ENV
 

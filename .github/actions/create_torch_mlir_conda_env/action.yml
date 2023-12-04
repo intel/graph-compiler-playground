@@ -1,0 +1,25 @@
+name: Install torch-mlir required python packages
+description: Checkout torch-mlir repo and install required packages in an empty conda env
+
+inputs:
+    conda_env:
+        required: true
+        type: string
+        description: Name of torch-mlir conda env
+
+runs:
+    using: composite
+        - name: Checkout torch-mlir repo
+          uses: actions/checkout@v4
+          with:
+              repository: intel-ai/torch-mlir
+              path: torch-mlir
+              ref: 'cpu-proto'
+              submodules: recursive
+
+        - name: Install required packages
+          run: |
+              ${CONDA}/bin/conda env update --solver libmamba -n ${{ inputs.conda_env }} -f tests/conda-envs/${{ inputs.conda_env }}.yaml
+              source ${CONDA}/bin/activate ${{ inputs.conda_env }}
+              cd torch-mlir
+              pip install -r requirements.txt
