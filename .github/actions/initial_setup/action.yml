@@ -44,7 +44,7 @@ runs:
           if: steps.conda-cache.outputs.cache-hit != 'true' && inputs.conda_env == 'mlir'
           uses: ./.github/actions/create_torch_mlir_conda_env
           with:
-              conda_env: $${{ inputs.conda_env }}
+              conda_env: ${{ inputs.conda_env }}
 
         - name: Download mlir that was built in previous job
           uses: actions/download-artifact@v3

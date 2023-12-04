@@ -33,7 +33,7 @@ runs:
           if: steps.conda-cache.outputs.cache-hit != 'true'
           uses: ./.github/actions/create_torch_mlir_conda_env
           with:
-              conda_env: $${{ inputs.conda_env }}
+              conda_env: ${{ inputs.conda_env }}
 
         - name: Build torch-mlir
           shell: bash -el {0}
