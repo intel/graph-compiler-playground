@@ -10,6 +10,14 @@ inputs:
 runs:
     using: composite
     steps:
+        - name: Checkout torch-mlir repo
+          uses: actions/checkout@v4
+          with:
+              repository: intel-ai/torch-mlir
+              path: torch-mlir
+              ref: 'cpu-proto'
+              submodules: recursive
+
         - name: Get Date
           id: get-date
           run: echo "today=$(/bin/date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
@@ -40,6 +48,7 @@ runs:
           run: |
               source ${CONDA}/bin/activate ${{ inputs.conda_env }}
               source /opt/intel/oneapi/setvars.sh
+              cd torch-mlir
               cmake -GNinja -Bbuild \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DPython3_FIND_VIRTUALENV=ONLY \

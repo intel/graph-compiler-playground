@@ -10,14 +10,6 @@ inputs:
 runs:
     using: composite
     steps:
-        - name: Checkout torch-mlir repo
-          uses: actions/checkout@v4
-          with:
-              repository: intel-ai/torch-mlir
-              path: torch-mlir
-              ref: 'cpu-proto'
-              submodules: recursive
-
         - name: Install required packages
           shell: bash -el {0}
           run: |
