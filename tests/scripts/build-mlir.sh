@@ -4,7 +4,10 @@ if (( $# != 1 )); then
     >&2 echo "Need path to torch-mlir repository as an argument."
 fi
 
-conda activate mlir-test
+source ${CONDA}/bin/activate mlir
+
+env
+${CONDA}/bin/conda list
 
 cd $1
 pip install -r requirements.txt

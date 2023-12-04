@@ -1,4 +1,4 @@
-name: cpu-test
+name: cpu
 channels:
   - pytorch
 dependencies:

@@ -62,6 +62,7 @@ jobs:
             - name: Run MLP test on specific compiler
               shell: bash -el {0}
               run: |
+                  source ${CONDA}/bin/activate ${{ inputs.conda_env }}
                   benchmark-run \
                     --host spr \
                     --benchmark mlp \

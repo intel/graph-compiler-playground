@@ -1,4 +1,4 @@
-name: ipex-test
+name: ipex
 channels:
   - intel
   - conda-forge
