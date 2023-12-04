@@ -1,5 +1,5 @@
 name: Build torch-mlir
-description: Checkout torch-mlir repo and build it in mlir-test conda env
+description: Checkout torch-mlir repo and build it in mlir conda env
 
 inputs:
     conda_env:
@@ -10,8 +10,6 @@ inputs:
 runs:
     using: composite
     steps:
-        - uses: actions/checkout@v4
-
         - name: Get Date
           id: get-date
           run: echo "today=$(/bin/date -u '+%Y%m%d')" >> $GITHUB_OUTPUT

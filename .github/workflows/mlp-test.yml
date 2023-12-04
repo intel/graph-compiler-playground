@@ -31,7 +31,7 @@ jobs:
             - name: Build mlir and upload to artifact storage
               uses: ./.github/actions/build_mlir
               with:
-                  conda_env: $${{ inputs.conda_env }}
+                  conda_env: ${{ inputs.conda_env }}
 
     mlp_test:
         runs-on:
