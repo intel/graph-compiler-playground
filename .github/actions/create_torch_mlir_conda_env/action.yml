@@ -19,6 +19,7 @@ runs:
               submodules: recursive
 
         - name: Install required packages
+          shell: bash -el {0}
           run: |
               ${CONDA}/bin/conda env update --solver libmamba -n ${{ inputs.conda_env }} -f tests/conda-envs/${{ inputs.conda_env }}.yaml
               source ${CONDA}/bin/activate ${{ inputs.conda_env }}
