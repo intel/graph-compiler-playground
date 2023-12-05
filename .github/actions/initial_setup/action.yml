@@ -14,6 +14,18 @@ inputs:
 runs:
     using: composite
     steps:
+        - name: Download mlir that was built in previous job
+          if: ${{ inputs.conda_env == 'mlir' }}
+          uses: actions/download-artifact@v3
+          with:
+              name: torch-mlir-binary
+              path: torch-mlir.tar
+
+        - name: Setup benchmarks package
+          if: ${{ inputs.conda_env == 'mlir' }}
+          shell: bash -el {0}
+          run: tar xf torch-mlir.tar
+
         - name: Get Date
           id: get-date
           run: echo "today=$(/bin/date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
@@ -44,16 +56,8 @@ runs:
           with:
               conda_env: ${{ inputs.conda_env }}
 
-        - name: Download mlir that was built in previous job
-          uses: actions/download-artifact@v3
-          with:
-              name: torch-mlir-binary
-              path: torch-mlir.tar
-          if: ${{ inputs.conda_env == 'mlir' }}
-
         - name: Setup benchmarks package
           shell: bash -el {0}
           run: |
-              tar xf torch-mlir.tar
               source ${CONDA}/bin/activate ${{ inputs.conda_env }}
               pip install -e .
