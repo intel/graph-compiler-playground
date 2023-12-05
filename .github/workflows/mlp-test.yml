@@ -76,6 +76,7 @@ jobs:
               run: |
                   BATCH_SIZE=$(printf "%04d" ${{ matrix.batch_size }})
                   source ${CONDA}/bin/activate ${{ inputs.conda_env }}
+                  export ONEDNN_VERBOSE=dispatch
                   benchmark-run \
                     --host spr \
                     --benchmark mlp \
