@@ -8,7 +8,7 @@ jobs:
         strategy:
             matrix:
                 type: [
-                  {env: 'cpu', device: 'cpu', compiler: ''},
+                  {env: 'cpu', device: 'cpu', compiler: 'torch'},
                   {env: 'cpu', device: 'cpu', compiler: 'dynamo'},
                   {env: 'cpu', device: 'cpu', compiler: 'torchscript'},
                   {env: 'cpu', device: 'cpu', compiler: 'torchscript_onednn'},
