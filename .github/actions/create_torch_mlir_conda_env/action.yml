@@ -1,0 +1,19 @@
+name: Install torch-mlir required python packages
+description: Checkout torch-mlir repo and install required packages in an empty conda env
+
+inputs:
+    conda_env:
+        required: true
+        type: string
+        description: Name of torch-mlir conda env
+
+runs:
+    using: composite
+    steps:
+        - name: Install required packages
+          shell: bash -el {0}
+          run: |
+              ${CONDA}/bin/conda env update --solver libmamba -n ${{ inputs.conda_env }} -f tests/conda-envs/${{ inputs.conda_env }}.yaml
+              source ${CONDA}/bin/activate ${{ inputs.conda_env }}
+              cd torch-mlir
+              pip install -r requirements.txt

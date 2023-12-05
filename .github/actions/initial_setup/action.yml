@@ -14,6 +14,17 @@ inputs:
 runs:
     using: composite
     steps:
+        - name: Download mlir that was built in previous job
+          if: ${{ inputs.conda_env == 'mlir' }}
+          uses: actions/download-artifact@v3
+          with:
+              name: torch-mlir-binary
+
+        - name: Setup benchmarks package
+          if: ${{ inputs.conda_env == 'mlir' }}
+          shell: bash -el {0}
+          run: tar xf torch-mlir.tar
+
         - name: Get Date
           id: get-date
           run: echo "today=$(/bin/date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
@@ -33,16 +44,28 @@ runs:
                   ${{ steps.get-date.outputs.today }}-
                   ${{ env.CACHE_NUMBER }}
 
-        - name: Update conda env
-          if: steps.conda-cache.outputs.cache-hit != 'true'
+        - name: Update conda env for non-torch-mlir envs
+          if: steps.conda-cache.outputs.cache-hit != 'true' && inputs.conda_env != 'mlir'
           shell: bash -el {0}
           run: ${CONDA}/bin/conda env update --solver libmamba -n ${{ inputs.conda_env }} -f tests/conda-envs/${{ inputs.conda_env }}.yaml
 
-        - uses: ./.github/actions/build_mlir
-          if: ${{ inputs.conda_env == 'mlir' }}
+        - name: Update conda env for torch-mlir env
+          if: steps.conda-cache.outputs.cache-hit != 'true' && inputs.conda_env == 'mlir'
+          uses: ./.github/actions/create_torch_mlir_conda_env
+          with:
+              conda_env: ${{ inputs.conda_env }}
 
         - name: Setup benchmarks package
           shell: bash -el {0}
           run: |
               source ${CONDA}/bin/activate ${{ inputs.conda_env }}
               pip install -e .
+
+        - name: Save environment variables for mlir env
+          if: ${{ inputs.conda_env == 'mlir' }}
+          shell: bash -el {0}
+          run: |
+              source ${CONDA}/bin/activate ${{ inputs.conda_env }}
+              source /opt/intel/oneapi/setvars.sh
+              echo PYTHONPATH=`pwd`/torch-mlir/build/tools/torch-mlir/python_packages/torch_mlir:`pwd`/torch-mlir/examples:$PYTHONPATH >> $GITHUB_ENV
+              echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH >> $GITHUB_ENV

@@ -20,10 +20,25 @@ on:
                 required: true
 
 jobs:
+    build_mlir:
+        runs-on:
+            - self-hosted
+            - glados
+        steps:
+            - uses: actions/checkout@v4
+              if: ${{ inputs.conda_env == 'mlir' }}
+
+            - name: Build mlir and upload to artifact storage
+              if: ${{ inputs.conda_env == 'mlir' }}
+              uses: ./.github/actions/build_mlir
+              with:
+                  conda_env: ${{ inputs.conda_env }}
+
     mlp_test:
         runs-on:
             - self-hosted
             - glados
+        needs: build_mlir
         strategy:
             matrix:
                 bname:
@@ -54,6 +69,7 @@ jobs:
             fail-fast: false
         steps:
             - uses: actions/checkout@v4
+
             - uses: ./.github/actions/initial_setup
               with:
                   conda_env: ${{ inputs.conda_env }}
