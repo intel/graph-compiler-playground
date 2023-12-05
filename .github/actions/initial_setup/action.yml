@@ -19,7 +19,6 @@ runs:
           uses: actions/download-artifact@v3
           with:
               name: torch-mlir-binary
-              path: torch-mlir.tar
 
         - name: Setup benchmarks package
           if: ${{ inputs.conda_env == 'mlir' }}
