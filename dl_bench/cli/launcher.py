@@ -55,7 +55,7 @@ def parse_args():
         default="torch",
         choices=[
             "",
-            "torch"
+            "torch",
             "dynamo",
             "torchscript",
             "torchscript_onednn",
