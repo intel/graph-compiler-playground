@@ -24,9 +24,11 @@ runs:
           if: ${{ inputs.conda_env == 'mlir' }}
           shell: bash -el {0}
           run: |
-              pwd
-              ls -la
               tar xf torch-mlir.tar
+              source ${CONDA}/bin/activate ${{ inputs.conda_env }}
+              source /opt/intel/oneapi/setvars.sh
+              echo PYTHONPATH=`pwd`/torch-mlir/build/tools/torch-mlir/python_packages/torch_mlir:`pwd`/torch-mlir/examples:$PYTHONPATH >> $GITHUB_ENV
+              echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH >> $GITHUB_ENV
 
         - name: Get Date
           id: get-date
