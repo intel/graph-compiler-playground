@@ -62,12 +62,13 @@ jobs:
             - name: Run MLP test on specific compiler
               shell: bash -el {0}
               run: |
+                  BATCH_SIZE=$(printf "%04d" ${{ matrix.batch_size }})
                   source ${CONDA}/bin/activate ${{ inputs.conda_env }}
                   benchmark-run \
                     --host spr \
                     --benchmark mlp \
                     -p "name='${{ matrix.bname }}',batch_size=${{ matrix.batch_size }}" \
-                    --benchmark_desc "${{ matrix.bname }}_bs${{ matrix.batch_size }}" \
+                    --benchmark_desc "${{ matrix.bname }}_bs${BATCH_SIZE}" \
                     --compiler "${{ inputs.compiler }}" \
                     --device ${{ inputs.device }} \
                     -v --url ${{ secrets.DB_URL }}
