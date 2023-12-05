@@ -52,9 +52,10 @@ def parse_args():
     parser.add_argument(
         "-c",
         "--compiler",
-        default="",
+        default="torch",
         choices=[
             "",
+            "torch"
             "dynamo",
             "torchscript",
             "torchscript_onednn",
