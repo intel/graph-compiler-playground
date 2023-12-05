@@ -23,12 +23,7 @@ runs:
         - name: Setup benchmarks package
           if: ${{ inputs.conda_env == 'mlir' }}
           shell: bash -el {0}
-          run: |
-              tar xf torch-mlir.tar
-              source ${CONDA}/bin/activate ${{ inputs.conda_env }}
-              source /opt/intel/oneapi/setvars.sh
-              echo PYTHONPATH=`pwd`/torch-mlir/build/tools/torch-mlir/python_packages/torch_mlir:`pwd`/torch-mlir/examples:$PYTHONPATH >> $GITHUB_ENV
-              echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH >> $GITHUB_ENV
+          run: tar xf torch-mlir.tar
 
         - name: Get Date
           id: get-date
@@ -65,3 +60,12 @@ runs:
           run: |
               source ${CONDA}/bin/activate ${{ inputs.conda_env }}
               pip install -e .
+
+        - name: Save environment variables for mlir env
+          if: ${{ inputs.conda_env == 'mlir' }}
+          shell: bash -el {0}
+          run: |
+              source ${CONDA}/bin/activate ${{ inputs.conda_env }}
+              source /opt/intel/oneapi/setvars.sh
+              echo PYTHONPATH=`pwd`/torch-mlir/build/tools/torch-mlir/python_packages/torch_mlir:`pwd`/torch-mlir/examples:$PYTHONPATH >> $GITHUB_ENV
+              echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH >> $GITHUB_ENV
