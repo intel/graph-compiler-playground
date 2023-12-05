@@ -34,6 +34,11 @@ on:
                     - torchscript_onednn
                     - ipex
                     - torch_mlir
+            tag:
+                description: tag to label this run in DB
+                required: true
+                default: "test"
+                type: string
 
 jobs:
     mlp_test:
@@ -42,5 +47,6 @@ jobs:
             conda_env: ${{ inputs.env }}
             compiler: ${{ inputs.compiler }}
             device: ${{ inputs.device }}
+            tag: ${{ inputs.tag }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}

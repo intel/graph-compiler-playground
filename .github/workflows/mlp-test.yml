@@ -15,6 +15,10 @@ on:
                 required: true
                 type: string
                 description: Type of engine to use
+            tag:
+                required: true
+                type: string
+                description: Tag to label this result in DB
         secrets:
             DB_URL:
                 required: true
@@ -71,4 +75,5 @@ jobs:
                     --benchmark_desc "${{ matrix.bname }}_bs${BATCH_SIZE}" \
                     --compiler "${{ inputs.compiler }}" \
                     --device ${{ inputs.device }} \
+                    --tag ${{ inputs.tag }} \
                     -v --url ${{ secrets.DB_URL }}
