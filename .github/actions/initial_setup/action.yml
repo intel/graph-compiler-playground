@@ -50,11 +50,12 @@ runs:
           uses: actions/download-artifact@v3
           with:
               name: torch-mlir-binary
-              path: torch-mlir
+              path: torch-mlir.tar
           if: ${{ inputs.conda_env == 'mlir' }}
 
         - name: Setup benchmarks package
           shell: bash -el {0}
           run: |
+              tar xf torch-mlir.tar
               source ${CONDA}/bin/activate ${{ inputs.conda_env }}
               pip install -e .
