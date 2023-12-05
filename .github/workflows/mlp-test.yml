@@ -67,6 +67,8 @@ jobs:
                     - {bname: 'size5', batch_size: 8196}
             fail-fast: false
         steps:
+            - uses: actions/checkout@v4
+
             - uses: ./.github/actions/initial_setup
               with:
                   conda_env: ${{ inputs.conda_env }}
