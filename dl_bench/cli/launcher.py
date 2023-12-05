@@ -104,8 +104,10 @@ def main():
 
     device = args.device
     compiler = args.compiler
+    if compiler == "":
+        compiler = "torch"
     host = args.host
-    backend_desc = args.backend_desc or f"{args.host}_{args.device}_{args.compiler}"
+    backend_desc = args.backend_desc or f"{host}_{device}_{compiler}"
 
 
     backend = Backend(device=device, compiler=compiler)
