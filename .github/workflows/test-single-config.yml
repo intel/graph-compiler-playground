@@ -34,6 +34,14 @@ on:
                     - torchscript_onednn
                     - ipex
                     - torch_mlir
+            dtype:
+                description: Dtype to use
+                required: true
+                default: float32
+                type: choice
+                options:
+                    - float32
+                    - bfloat16
             tag:
                 description: tag to label this run in DB
                 required: true
@@ -48,5 +56,6 @@ jobs:
             compiler: ${{ inputs.compiler }}
             device: ${{ inputs.device }}
             tag: ${{ inputs.tag }}
+            dtype: ${{ inputs.dtype }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}

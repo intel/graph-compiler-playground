@@ -15,6 +15,9 @@ on:
                 required: true
                 type: string
                 description: Type of engine to use
+            dtype:
+                type: string
+                default: float32
             tag:
                 required: true
                 type: string
@@ -76,4 +79,5 @@ jobs:
                     --compiler "${{ inputs.compiler }}" \
                     --device ${{ inputs.device }} \
                     --tag ${{ inputs.tag }} \
+                    --dtype ${{ inputs.dtype }} \
                     -v --url ${{ secrets.DB_URL }}
