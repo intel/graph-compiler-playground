@@ -1,15 +1,27 @@
 name: Build torch-mlir
 description: Checkout torch-mlir repo and build it in mlir-test conda env
 
+inputs:
+    torch_mlir_repo:
+        description: Torch-MLIR repository on github
+        required: true
+        default: intel-ai/torch-mlir
+        type: string
+    torch_mlir_branch:
+        description: Torch-MLIR branch to checkout
+        required: true
+        default: cpu-proto
+        type: string
+
 runs:
     using: composite
     steps:
         - name: Checkout torch-mlir repo
           uses: actions/checkout@v4
           with:
-              repository: intel-ai/torch-mlir
+              repository: ${{ inputs.torch_mlir_repo }}
               path: torch-mlir
-              ref: 'cpu-proto'
+              ref: ${{ inputs.torch_mlir_branch }}
               submodules: recursive
         - name: Build torch-mlir
           shell: bash -el {0}
