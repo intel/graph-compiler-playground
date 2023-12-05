@@ -63,6 +63,7 @@ jobs:
               shell: bash -el {0}
               run: |
                   source ${CONDA}/bin/activate ${{ inputs.conda_env }}
+                  export ONEDNN_VERBOSE=dispatch
                   benchmark-run \
                     --host spr \
                     --benchmark mlp \
