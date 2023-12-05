@@ -24,7 +24,10 @@ runs:
         - name: Setup benchmarks package
           if: ${{ inputs.conda_env == 'mlir' }}
           shell: bash -el {0}
-          run: tar xf torch-mlir.tar
+          run: |
+              pwd
+              ls -la
+              tar xf torch-mlir.tar
 
         - name: Get Date
           id: get-date
