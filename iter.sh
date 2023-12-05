@@ -16,5 +16,5 @@ do
     echo "Batch size $BATCH_SIZE"
     echo "Benchmark $size"
     BATCH_SIZE_TXT=$(printf "%04d" $BATCH_SIZE)
-    benchmark-run -p "name='${size}',batch_size=${BATCH_SIZE}" --benchmark_desc "${size}_bs{BATCH_SIZE_TXT}" ${DL_BENCH_ARGS} || echo Failed
+    benchmark-run -p "name='${size}',batch_size=${BATCH_SIZE}" --benchmark_desc "${size}_bs${BATCH_SIZE_TXT}" ${DL_BENCH_ARGS} || echo Failed
 done
