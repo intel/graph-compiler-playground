@@ -68,7 +68,7 @@ jobs:
                     --host spr \
                     --benchmark mlp \
                     -p "name='${{ matrix.bname }}',batch_size=${BATCH_SIZE}" \
-                    --benchmark_desc "${{ matrix.bname }}_bs${BATCH_SIZE}" \
+                    --benchmark_desc "${{ matrix.bname }}_bs${{ matrix.batch_size }}" \
                     --compiler "${{ inputs.compiler }}" \
                     --device ${{ inputs.device }} \
                     -v --url ${{ secrets.DB_URL }}
