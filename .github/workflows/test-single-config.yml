@@ -28,6 +28,7 @@ on:
                 default: torch_mlir
                 type: choice
                 options:
+                    - torch
                     - dynamo
                     - torchscript
                     - torchscript_onednn
