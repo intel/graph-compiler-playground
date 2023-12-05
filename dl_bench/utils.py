@@ -119,7 +119,7 @@ class Backend:
 
         compile_mode = compile_mode.lower()
         # Empty string means no compilation
-        if compile_mode == "":
+        if compile_mode == "torch":
             compiled_model = model
         elif compile_mode == "torchscript":
             compiled_model = torch.jit.trace(model, sample_input)
