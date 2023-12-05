@@ -249,13 +249,21 @@ class MlpBenchmark(Benchmark):
                 for x, y in testloader:
                     x = backend.to_device(x)
                     y = backend.to_device(y)
-                    with torch.autocast(device_type=backend.device_name, dtype=backend.dtype):
+                    if backend.dtype == torch.float32:
                         output = net(x)
                         assert output.dtype is backend.dtype, f"{output.dtype}!={backend.dtype}"
                         _, predicted = torch.max(output.data, 1)
 
                         total += y.size(0)
                         correct += (predicted == y).sum().item()
+                    else:
+                        with torch.autocast(device_type=backend.device_name, dtype=backend.dtype):
+                            output = net(x)
+                            assert output.dtype is backend.dtype, f"{output.dtype}!={backend.dtype}"
+                            _, predicted = torch.max(output.data, 1)
+
+                            total += y.size(0)
+                            correct += (predicted == y).sum().item()
 
                     n_items += len(x)
 
