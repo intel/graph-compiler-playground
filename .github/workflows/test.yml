@@ -7,7 +7,15 @@ on:
                 description: tag to label this run in DB
                 required: true
                 default: "test"
+            torch_mlir_repo:
+                description: Torch-MLIR repository on github
+                required: true
+                default: intel-ai/torch-mlir
                 type: string
+            torch_mlir_branch:
+                description: Torch-MLIR branch to checkout
+                required: true
+                default: cpu-proto
 
 jobs:
     mlp_test:
@@ -29,5 +37,7 @@ jobs:
             compiler: ${{ matrix.type.compiler }}
             device: ${{ matrix.type.device }}
             tag: ${{ inputs.tag }}
+            torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
+            torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}

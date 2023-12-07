@@ -19,6 +19,16 @@ on:
                 required: true
                 type: string
                 description: Tag to label this result in DB
+            torch_mlir_repo:
+                description: Torch-MLIR repository on github
+                required: true
+                default: intel-ai/torch-mlir
+                type: string
+            torch_mlir_branch:
+                description: Torch-MLIR branch to checkout
+                required: true
+                default: cpu-proto
+                type: string
         secrets:
             DB_URL:
                 required: true
@@ -34,12 +44,15 @@ jobs:
               with:
                   conda_env: ${{ inputs.conda_env }}
                   compiler: ${{ inputs.compiler }}
+                  torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
+                  torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
 
             - name: Run MLP test on specific compiler
               shell: bash -el {0}
               run: |
                   BATCH_SIZE=$(printf "%04d" ${{ matrix.batch_size }})
                   source ${CONDA}/bin/activate ${{ inputs.conda_env }}
-                  export DL_BENCH_ARGS="--host spr --benchmark mlp --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} -v --url ${{ secrets.DB_URL }}"
 
+                  export ONEDNN_VERBOSE=1
+                  export DL_BENCH_ARGS="--host spr --benchmark mlp --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} -v --url ${{ secrets.DB_URL }}"
                   source iter.sh

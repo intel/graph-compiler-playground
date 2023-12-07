@@ -10,6 +10,16 @@ inputs:
         required: true
         type: string
         description: Compiler used for execution
+    torch_mlir_repo:
+        description: Torch-MLIR repository on github
+        required: true
+        default: intel-ai/torch-mlir
+        type: string
+    torch_mlir_branch:
+        description: Torch-MLIR branch to checkout
+        required: true
+        default: cpu-proto
+        type: string
 
 runs:
     using: composite
@@ -38,8 +48,12 @@ runs:
           shell: bash -el {0}
           run: ${CONDA}/bin/conda env update --solver libmamba -n ${{ inputs.conda_env }} -f tests/conda-envs/${{ inputs.conda_env }}.yaml
 
-        - uses: ./.github/actions/build_mlir
+        - name: Build Torch-MLIR from sources
           if: ${{ inputs.conda_env == 'mlir' }}
+          uses: ./.github/actions/build_mlir
+          with:
+              torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
+              torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
 
         - name: Setup benchmarks package
           shell: bash -el {0}
