@@ -107,17 +107,14 @@ class Backend:
     def to_device(self, x: torch.Tensor):
         if self.device_name == "cuda":
             return x.to(self.device)
-            # return x.to(self.device, dtype=self.dtype)
         elif self.device_name == "xpu":
             raise NotImplementedError("xpu have no to_device impl yet.")
         elif self.device_name == "cpu":
             return x
-            # return x.to(dtype=self.dtype)
         else:
             raise ValueError("Unknown device")
 
     def prepare_eval_model(self, model, sample_input):
-        # model.to(self.device, dtype=self.dtype)
         model.to(self.device)
         with torch.no_grad():
             model.eval()
@@ -127,7 +124,6 @@ class Backend:
 
     @staticmethod
     def _compile_model(compile_mode: str, device, model: Module, sample_input, dtype):
-        # sample_input = sample_input.to(device, dtype=dtype)
         sample_input = sample_input.to(device)
 
         # with torch.autocast(device_type=backend.device_name, dtype=backend.dtype):
