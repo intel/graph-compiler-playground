@@ -15,6 +15,10 @@ on:
                 required: true
                 type: string
                 description: Type of engine to use
+            tag:
+                required: true
+                type: string
+                description: Tag to label this result in DB
             torch_mlir_repo:
                 description: Torch-MLIR repository on github
                 required: true
@@ -34,34 +38,6 @@ jobs:
         runs-on:
             - self-hosted
             - glados
-        strategy:
-            matrix:
-                bname:
-                    - size2
-                    - size3
-                    - size4
-                    - size5
-                    - size5_sigm
-                    - size5_tanh
-                    - size5_gelu
-                    - size5_linear
-                    - size5_inplace
-                    - size5_bn
-                    - size5_bn_gelu
-                    - size5_drop_gelu
-                    - 100@512
-                    - 25@1024
-                    - 4@16384
-                    - 2@16384
-                batch_size:
-                    - 1024
-                include:
-                    - {bname: 'size5', batch_size: 1}
-                    - {bname: 'size5', batch_size: 16}
-                    - {bname: 'size5', batch_size: 256}
-                    - {bname: 'size5', batch_size: 2048}
-                    - {bname: 'size5', batch_size: 8196}
-            fail-fast: false
         steps:
             - uses: actions/checkout@v4
             - uses: ./.github/actions/initial_setup
@@ -70,18 +46,13 @@ jobs:
                   compiler: ${{ inputs.compiler }}
                   torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
                   torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
-      
+
             - name: Run MLP test on specific compiler
               shell: bash -el {0}
               run: |
                   BATCH_SIZE=$(printf "%04d" ${{ matrix.batch_size }})
                   source ${CONDA}/bin/activate ${{ inputs.conda_env }}
+
                   export ONEDNN_VERBOSE=1
-                  benchmark-run \
-                    --host spr \
-                    --benchmark mlp \
-                    -p "name='${{ matrix.bname }}',batch_size=${{ matrix.batch_size }}" \
-                    --benchmark_desc "${{ matrix.bname }}_bs${BATCH_SIZE}" \
-                    --compiler "${{ inputs.compiler }}" \
-                    --device ${{ inputs.device }} \
-                    -v --url ${{ secrets.DB_URL }}
+                  export DL_BENCH_ARGS="--host spr --benchmark mlp --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} -v --url ${{ secrets.DB_URL }}"
+                  source iter.sh

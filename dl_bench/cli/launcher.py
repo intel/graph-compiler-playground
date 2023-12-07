@@ -43,6 +43,11 @@ def parse_args():
         help="Backend descriptor for database.",
     )
     parser.add_argument(
+        "--host",
+        default="",
+        help="Name of the host machine",
+    )
+    parser.add_argument(
         "-d",
         "--device",
         default="cpu",
@@ -65,10 +70,16 @@ def parse_args():
         help="Compilation mode to use. No compilation by default.",
     )
     parser.add_argument(
-        "--host",
-        default="",
-        help="Name of the host machine",
+        "--dtype",
+        default="float32",
+        choices=[
+            "float32",
+            "bfloat16",
+        ],
+        help="Dtype for computations.",
     )
+    # Reporting
+    parser.add_argument("-t", "--tag", default="", help="Tag to mark this result in DB")
 
     parser.add_argument(
         "-u",
@@ -103,15 +114,17 @@ def main():
     benchmark_desc = args.benchmark_desc or f"{benchmark_name}_{args.benchmark_params}"
     benchmark_params = parse_benchmark_params(args.benchmark_params)
 
+    host = args.host
     device = args.device
     compiler = args.compiler
     if compiler == "":
         compiler = "torch"
-    host = args.host
+    dtype = args.dtype
     backend_desc = args.backend_desc or f"{host}_{device}_{compiler}"
+    if dtype != 'float32':
+        backend_desc += '_' + str(dtype)
 
-
-    backend = Backend(device=device, compiler=compiler)
+    backend = Backend(device=device, compiler=compiler, dtype=dtype)
     benchmark = benchmarks_table[benchmark_name]()
     results = benchmark.run(backend=backend, params=benchmark_params)
 
@@ -119,6 +132,7 @@ def main():
 
 
     report = {
+        "tag": args.tag,
         "benchmark": benchmark_name,
         "benchmark_desc": benchmark_desc,
         "benchmark_params": benchmark_params,
@@ -126,6 +140,7 @@ def main():
         "host": host,
         "device": device,
         "compiler": compiler,
+        "dtype": dtype,
         **{c: results.get(c, 0) for c in ["warmup_s", "duration_s", "samples_per_s", "flops_per_sample"]},
     }
 

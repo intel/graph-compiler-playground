@@ -34,6 +34,18 @@ on:
                     - torchscript_onednn
                     - ipex
                     - torch_mlir
+            dtype:
+                description: Dtype to use
+                required: true
+                default: float32
+                type: choice
+                options:
+                    - float32
+                    - bfloat16
+            tag:
+                description: tag to label this run in DB
+                required: true
+                default: "test"
             torch_mlir_repo:
                 description: Torch-MLIR repository on github
                 required: true
@@ -43,7 +55,6 @@ on:
                 description: Torch-MLIR branch to checkout
                 required: true
                 default: cpu-proto
-                type: string
 
 jobs:
     mlp_test:
@@ -52,6 +63,8 @@ jobs:
             conda_env: ${{ inputs.env }}
             compiler: ${{ inputs.compiler }}
             device: ${{ inputs.device }}
+            tag: ${{ inputs.tag }}
+            dtype: ${{ inputs.dtype }}
             torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
             torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
         secrets:

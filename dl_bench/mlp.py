@@ -163,7 +163,7 @@ def get_macs(model, in_shape, backend):
     """Calculate MACs, conventional FLOPS = MACs * 2."""
     from thop import profile
 
-    sample = backend.to_device(torch.rand(1, *in_shape))
+    sample = torch.rand(1, *in_shape)
 
     model.eval()
     with torch.no_grad():
@@ -249,10 +249,21 @@ class MlpBenchmark(Benchmark):
                 for x, y in testloader:
                     x = backend.to_device(x)
                     y = backend.to_device(y)
-                    outputs = net(x)
-                    _, predicted = torch.max(outputs.data, 1)
-                    total += y.size(0)
-                    correct += (predicted == y).sum().item()
+                    if backend.dtype == torch.float32:
+                        output = net(x)
+                        assert output.dtype is backend.dtype, f"{output.dtype}!={backend.dtype}"
+                        _, predicted = torch.max(output.data, 1)
+
+                        total += y.size(0)
+                        correct += (predicted == y).sum().item()
+                    else:
+                        with torch.autocast(device_type=backend.device_name, dtype=backend.dtype):
+                            output = net(x)
+                            assert output.dtype is backend.dtype, f"{output.dtype}!={backend.dtype}"
+                            _, predicted = torch.max(output.data, 1)
+
+                            total += y.size(0)
+                            correct += (predicted == y).sum().item()
 
                     n_items += len(x)
 

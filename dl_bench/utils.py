@@ -88,12 +88,21 @@ class Benchmark(abc.ABC):
     def run(self, backend, params):
         pass
 
+def get_dtype(dtype):
+    if dtype == 'float32':
+        return torch.float32
+    elif dtype == 'bfloat16':
+        return torch.bfloat16
+    else:
+        raise ValueError(f"Unsupported data type: {dtype}")
+
 
 class Backend:
-    def __init__(self, device, compiler) -> None:
+    def __init__(self, device, compiler, dtype="float32") -> None:
         self.device_name = device
         self.device = self._get_device(device_name=device)
         self.compile_mode = compiler
+        self.dtype = get_dtype(dtype)
 
     def to_device(self, x: torch.Tensor):
         if self.device_name == "cuda":
@@ -110,13 +119,14 @@ class Backend:
         with torch.no_grad():
             model.eval()
             return self._compile_model(
-                self.compile_mode, self.device, model, sample_input
+                self.compile_mode, self.device, model, sample_input, dtype=self.dtype
             )
 
     @staticmethod
-    def _compile_model(compile_mode: str, device, model: Module, sample_input):
+    def _compile_model(compile_mode: str, device, model: Module, sample_input, dtype):
         sample_input = sample_input.to(device)
 
+        # with torch.autocast(device_type=backend.device_name, dtype=backend.dtype):
         compile_mode = compile_mode.lower()
         # Empty string means no compilation
         if compile_mode == "torch":

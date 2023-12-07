@@ -3,6 +3,10 @@ name: Run tests on multiple platforms
 on:
     workflow_dispatch:
         inputs:
+            tag:
+                description: tag to label this run in DB
+                required: true
+                default: "test"
             torch_mlir_repo:
                 description: Torch-MLIR repository on github
                 required: true
@@ -12,7 +16,6 @@ on:
                 description: Torch-MLIR branch to checkout
                 required: true
                 default: cpu-proto
-                type: string
 
 jobs:
     mlp_test:
@@ -33,6 +36,7 @@ jobs:
             conda_env: ${{ matrix.type.env }}
             compiler: ${{ matrix.type.compiler }}
             device: ${{ matrix.type.device }}
+            tag: ${{ inputs.tag }}
             torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
             torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
         secrets:

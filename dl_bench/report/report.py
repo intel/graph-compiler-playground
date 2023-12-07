@@ -28,6 +28,7 @@ results_table = Table(
     # Basic data
     Column("id", Integer, primary_key=True),
     Column("date", DateTime(), nullable=False, server_default=func.now()),
+    make_string("tag"),
     # Benchmark info
     make_string("benchmark_desc"),
     make_string("benchmark"),
@@ -37,6 +38,7 @@ results_table = Table(
     make_string("host"),
     make_string("device"),
     make_string("compiler"),
+    make_string("dtype"),
     # Results
     Column("warmup_s", Float, nullable=False),
     Column("duration_s", Float, nullable=False),
