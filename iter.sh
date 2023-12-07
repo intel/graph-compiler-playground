@@ -1,4 +1,4 @@
-export ONEDNN_VERBOSE=0
+export ONEDNN_VERBOSE=1
 
 if [[ -z "${DL_BENCH_ARGS}" ]]; then
   echo "Please, provide DATASETS_PWD environment variable"
