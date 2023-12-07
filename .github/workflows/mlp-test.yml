@@ -53,6 +53,6 @@ jobs:
                   BATCH_SIZE=$(printf "%04d" ${{ matrix.batch_size }})
                   source ${CONDA}/bin/activate ${{ inputs.conda_env }}
 
-                  export ONEDNN_VERBOSE=1
+                  export ONEDNN_VERBOSE=0
                   export DL_BENCH_ARGS="--host spr --benchmark mlp --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} -v --url ${{ secrets.DB_URL }}"
                   source iter.sh
