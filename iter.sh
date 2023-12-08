@@ -9,7 +9,7 @@ echo "CNN"
 for size in resnet18
 do
     echo "Benchmark $size"
-    benchmark-run -b cnn -p "name='${size}'" --benchmark_desc "${size}_bs1024" ${DL_BENCH_ARGS} || echo Failed
+    benchmark-run -b cnn -p "name='${size}',batch_size=32" --benchmark_desc "${size}_bs32" ${DL_BENCH_ARGS} || echo Failed
 done
 
 echo "Bfloat16 on size5"
