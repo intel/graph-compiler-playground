@@ -61,7 +61,7 @@ jobs:
               run: |
                   source ${CONDA}/bin/activate ${{ inputs.conda_env }}
                   export ONEDNN_VERBOSE=1
-                  LABELS=${{ inputs.runner_labels }}
+                  LABELS="${{ inputs.runner_labels }}"
                   case "${LABELS}" in
                       *spr*) HOST="spr";;
                       *amd*) HOST="amd";;
