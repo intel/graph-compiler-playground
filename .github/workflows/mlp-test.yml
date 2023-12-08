@@ -32,14 +32,14 @@ on:
             runner_labels:
                 description: Labels to filter runners
                 required: false
-                default: '["self-hosted", "glados"]'
+                default: '[self-hosted, glados]'
                 type: string
         secrets:
             DB_URL:
                 required: true
 
 jobs:
-    myJob:
+    print_inputs:
         runs-on: Linux
         steps:
             - name: Print Inputs
