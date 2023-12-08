@@ -105,10 +105,8 @@ class Backend:
         self.dtype = get_dtype(dtype)
 
     def to_device(self, x: torch.Tensor):
-        if self.device_name == "cuda":
+        if self.device_name in ("cuda", 'xpu'):
             return x.to(self.device)
-        elif self.device_name == "xpu":
-            raise NotImplementedError("xpu have no to_device impl yet.")
         elif self.device_name == "cpu":
             return x
         else:
@@ -140,9 +138,10 @@ class Backend:
             compiled_model = torch.jit.trace(model, sample_input)
             print("Compiled with torchscript onednn")
         elif compile_mode == "ipex":
-            import intel_extension_for_pytorch
+            import intel_extension_for_pytorch as ipex
 
-            compiled_model = intel_extension_for_pytorch.optimize(model)
+            params = {} if dtype != torch.bfloat16 else {'dtype': torch.bfloat16}
+            compiled_model = ipex.optimize(model, **params)
             print("Compiled with ipex")
         elif compile_mode == "dynamo":
             compiled_model = torch.compile(
@@ -169,6 +168,7 @@ class Backend:
 #            debug_timer seems to cause problems:
 #            TypeError: TestOptions.__init__() got an unexpected keyword argument 'debug_timer'
 #            opts = TestOptions(debug_timer=False, use_kernels=True)
+            # opts = TestOptions(use_kernels=True, dumps=['all'])
             opts = TestOptions(use_kernels=True)
             module = jit(
                 model,
@@ -211,8 +211,7 @@ class Backend:
         device_name = device_name.lower()
         # TODO: do we really need this import?
         if device_name == "xpu":
-            import intel_extension_for_pytorch
-
+            return 'xpu'
         if device_name in ("cpu", "xpu", "cuda"):
             device = torch.device(device_name)
             return device
