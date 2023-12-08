@@ -32,7 +32,7 @@ on:
             runner_labels:
                 description: Labels to filter runners
                 required: false
-                default: '[self-hosted, glados]'
+                default: '["self-hosted", "glados"]'
                 type: string
         secrets:
             DB_URL:
@@ -46,7 +46,7 @@ jobs:
               run: echo "${{ toJSON(github.event.inputs) }}"
 
     mlp_test:
-        runs-on: ${{ inputs.runner_labels }}
+        runs-on: ${{ fromJSON(inputs.runner_labels) }}
         steps:
             - uses: actions/checkout@v4
             - uses: ./.github/actions/initial_setup
