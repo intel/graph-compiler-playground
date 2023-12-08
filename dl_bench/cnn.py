@@ -10,7 +10,7 @@ from torchvision.models import resnet18, resnet50, ResNet50_Weights
 
 from dl_bench.utils import Backend, Benchmark, TimerManager
 
-from dl_bench.mlp import RandomClsDataset, get_random_loaders, get_cifar_loaders, get_macs
+from dl_bench.mlp import RandomClsDataset, get_random_loaders, get_cifar_loaders
 
 
 def get_time():
@@ -30,6 +30,20 @@ def get_cnn(name):
     else:
         raise ValueError(f"Unknown name {name}")
 
+def get_macs(name, in_shape, backend):
+    """Calculate MACs, conventional FLOPS = MACs * 2."""
+    # from thop import profile
+
+    # sample = torch.rand(1, *in_shape)
+
+    # model.eval()
+    # with torch.no_grad():
+    #     macs, params = profile(model, inputs=(sample,), report_missing=True)
+    return {'resnet18': 1.82 * 2 * 1e9,
+            'resnet50': 4.14 * 2 * 1e9}[name]
+
+
+    return macs
 
 def build_mlp(
     n_chans_in: int,
@@ -92,7 +106,8 @@ class CnnBenchmark(Benchmark):
             device=backend.device_name,
         )
         net = get_cnn(name=name)
-        flops_per_sample = get_macs(net, IN_SHAPE, backend) * 2
+        # flops_per_sample = get_macs(net, IN_SHAPE, backend) * 2
+        flops_per_sample = get_macs(name, IN_SHAPE, backend) * 2
 
         sample = backend.to_device(torch.rand(batch_size, *IN_SHAPE))
         net = backend.prepare_eval_model(net, sample_input=sample)
