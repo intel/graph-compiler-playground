@@ -8,6 +8,7 @@ from dl_bench.cnn import CnnBenchmark
 from dl_bench.mlp_basic import MlpBasicBenchmark
 from dl_bench.report.report import BenchmarkDb
 from dl_bench.utils import Backend
+from dl_bench.tools.compare_tensors import compare
 
 benchmarks_table = {
     "mlp_oneiter": MlpBasicBenchmark,
@@ -95,6 +96,12 @@ def parse_args():
     parser.add_argument(
         "-v", "--verbose", required=False, action="store_true", help="Verbose mode."
     )
+    parser.add_argument(
+        "--skip_verification",
+        required=False,
+        action="store_true",
+        help="Skip golden generation and comparison.",
+    )
     return parser.parse_args()
 
 
@@ -123,15 +130,26 @@ def main():
         compiler = "torch"
     dtype = args.dtype
     backend_desc = args.backend_desc or f"{host}_{device}_{compiler}"
-    if dtype != 'float32':
-        backend_desc += '_' + str(dtype)
+    if dtype != "float32":
+        backend_desc += "_" + str(dtype)
 
     backend = Backend(device=device, compiler=compiler, dtype=dtype)
-    benchmark = benchmarks_table[benchmark_name]()
-    results = benchmark.run(backend=backend, params=benchmark_params)
+    benchmark = benchmarks_table[benchmark_name](benchmark_params)
+    if args.skip_verification:
+        results, current_outs = benchmark.inference(backend)
+    else:
+        import torch
+
+        reference_backend = Backend(
+            device="cuda" if torch.cuda.is_available() else "cpu",
+            compiler="torch",
+            dtype=dtype,
+        )
+        _, golden_results = benchmark.inference(reference_backend)
+        results, current_outs = benchmark.inference(backend)
+        cmp_res = compare(current_outs, golden_results)
 
     print(f"Benchmark {benchmark_name} completed")
-
 
     report = {
         "tag": args.tag,
@@ -143,14 +161,23 @@ def main():
         "device": device,
         "compiler": compiler,
         "dtype": dtype,
-        **{c: results.get(c, 0) for c in ["warmup_s", "duration_s", "samples_per_s", "flops_per_sample"]},
+        **{
+            c: results.get(c, 0)
+            for c in ["warmup_s", "duration_s", "samples_per_s", "flops_per_sample"]
+        },
     }
 
     db = BenchmarkDb(args.url)
 
     if args.verbose:
         print("Report:")
-        print("TFLOPS: {:.3}".format(results.get("flops_per_sample", 0) * results.get('samples_per_s', 0) / (10**12)))
+        print(
+            "TFLOPS: {:.3}".format(
+                results.get("flops_per_sample", 0)
+                * results.get("samples_per_s", 0)
+                / (10**12)
+            )
+        )
         pprint.pprint(report)
 
     if args.output is not None:

@@ -7,28 +7,32 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 
-from dl_bench.utils import Backend, Benchmark, TimerManager
+from dl_bench.utils import ConcreteBenchmark
+
+
+def get_time():
+    return time.perf_counter()
 
 
 class RandomClsDataset(Dataset):
-    def __init__(self, n, in_shape, n_classes):
+    def __init__(self, n, in_shape, n_classes, seed=42):
         super().__init__()
-
+        np.random.seed(seed)
         self.values = np.random.randn(n, *in_shape).astype(np.float32)
-        self.labels = np.random.randint(n_classes, size=(n,))
+        # self.labels = np.random.randint(n_classes, size=(n,))
 
     def __len__(self):
         return len(self.values)
 
     def __getitem__(self, index):
-        return self.values[index], self.labels[index]
+        return self.values[index]  # , self.labels[index]
 
 
 def get_random_loaders(n, in_shape, n_classes, batch_size, device: str):
     # This speeds up data copy for cuda devices
     pin_memory = device == "cuda"
 
-    ds = RandomClsDataset(n, in_shape, n_classes)
+    ds = RandomClsDataset(42, n, in_shape, n_classes)
     train_loader = DataLoader(
         ds, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=pin_memory
     )
@@ -37,14 +41,6 @@ def get_random_loaders(n, in_shape, n_classes, batch_size, device: str):
     )
     return train_loader, test_loader
 
-
-def get_time():
-    return time.perf_counter()
-
-
-# PARAMS
-IN_FEAT = 128
-N_CLASSES = 10
 
 size2_struct = [512, 1024, 2048, 512]
 # TODO: why 8192 to 1024, need to make more gradual, update while we recalc on cuda & amd
@@ -75,9 +71,7 @@ name2params = {
     "2@16384": dict(struct=[16384] * 2),
 }
 
-name2bs = {
-
-}
+name2bs = {}
 
 
 def build_mlp(
@@ -116,51 +110,32 @@ def get_mlp(n_chans_in, n_chans_out, name):
     net = build_mlp(n_chans_in, **params, n_chans_out=n_chans_out)
     return net
 
-def get_macs(model, in_shape, backend):
-    """Calculate MACs, conventional FLOPS = MACs * 2."""
-    from ptflops import get_model_complexity_info
 
-    model.eval()
-    with torch.no_grad():
-        macs, params = get_model_complexity_info(model, in_shape, as_strings=False,
-                                                 print_per_layer_stat=False, verbose=True)
-    return macs
+class MlpBenchmark(ConcreteBenchmark):
+    def __init__(self, params) -> None:
+        super().__init__()
 
+        # PARAMS
+        IN_FEAT = 128
+        N_CLASSES = 10
 
-class MlpBenchmark(Benchmark):
-    def run(self, backend: Backend, params):
-        tm = TimerManager()
+        self.in_shape = (IN_FEAT,)
 
         # PARAMS
         name = params.get("name", "size5")
-        batch_size = int(params.get("batch_size", 1024))
+        self.batch_size = int(params.get("batch_size", 1024))
 
         # Do early stopping once we hit min_batches & min_seconds to accelerate measurement
-        min_batches = 10
-        min_seconds = 10
-        DATASET_SIZE = max(10_240, batch_size * min_batches)
+        self.min_batches = 10
+        self.min_seconds = 10
 
-        trainloader, testloader = get_random_loaders(
-            DATASET_SIZE,
-            in_shape=(IN_FEAT,),
-            n_classes=N_CLASSES,
-            batch_size=batch_size,
-            device=backend.device_name,
-        )
-        net = get_mlp(n_chans_in=IN_FEAT, n_chans_out=N_CLASSES, name=name)
-        flops_per_sample = get_macs(net, (IN_FEAT,), backend) * 2
+        DATASET_SIZE = max(10_240, self.batch_size * self.min_batches)
 
-        sample = backend.to_device(torch.rand(batch_size, IN_FEAT))
-        net = backend.prepare_eval_model(net, sample_input=sample)
-        print("Warmup started")
-        with torch.no_grad():
-            net.eval()
-            with tm.timeit("warmup_s"):
-                net(sample)
-                net(sample)
-                net(sample)
-        print("Warmup done")
+        self.dataset = RandomClsDataset(DATASET_SIZE, self.in_shape, N_CLASSES, 42)
 
+        self.net = get_mlp(n_chans_in=IN_FEAT, n_chans_out=N_CLASSES, name=name)
+
+    def train(self):
         # We are not interested in training yet.
         # criterion = nn.CrossEntropyLoss()
         # optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
@@ -192,45 +167,4 @@ class MlpBenchmark(Benchmark):
         #     print(f"{n_items} took {stop - start}")
 
         # print('Finished Training')
-
-        correct = 0
-        total = 0
-        n_items = 0
-
-        net.eval()
-        with torch.no_grad():
-            start = time.perf_counter()
-            with tm.timeit("duration_s"):
-                for x, y in testloader:
-                    x = backend.to_device(x)
-                    y = backend.to_device(y)
-                    if backend.dtype == torch.float32:
-                        output = net(x)
-                        _, predicted = torch.max(output.data, 1)
-
-                        total += y.size(0)
-                        correct += (predicted == y).sum().item()
-                    else:
-                        with torch.autocast(device_type=backend.device_name, dtype=backend.dtype):
-                            output = net(x)
-                            assert output.dtype is backend.dtype, f"{output.dtype}!={backend.dtype}"
-                            _, predicted = torch.max(output.data, 1)
-
-                            total += y.size(0)
-                            correct += (predicted == y).sum().item()
-
-                    n_items += len(x)
-
-                    # early stopping
-                    if (time.perf_counter() - start) > min_seconds and n_items > batch_size * min_batches:
-                        break
-
-        print(f"{n_items} were processed in {tm.name2time['duration_s']}s")
-
-        results = tm.get_results()
-        results["samples_per_s"] = n_items / results["duration_s"]
-        results["flops_per_sample"] = flops_per_sample
-
-        return results
-
-        # print(f'Accuracy of the network on the 10000 test images: {100 * correct // total} %')
+        pass

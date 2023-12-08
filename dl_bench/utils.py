@@ -5,8 +5,12 @@ import torch
 from torch.nn import Module
 
 
-from typing import Any
+from typing import Any, Callable
+import copy
 import numpy as np
+
+from torch.utils.data import DataLoader, Dataset
+import time
 
 
 def recursively_convert_to_numpy(o: Any):
@@ -83,15 +87,10 @@ class TimerManager:
         return self.name2time
 
 
-class Benchmark(abc.ABC):
-    @abc.abstractmethod
-    def run(self, backend, params):
-        pass
-
-def get_dtype(dtype):
-    if dtype == 'float32':
+def str_to_dtype(dtype: str):
+    if dtype == "float32":
         return torch.float32
-    elif dtype == 'bfloat16':
+    elif dtype == "bfloat16":
         return torch.bfloat16
     else:
         raise ValueError(f"Unsupported data type: {dtype}")
@@ -102,7 +101,7 @@ class Backend:
         self.device_name = device
         self.device = self._get_device(device_name=device)
         self.compile_mode = compiler
-        self.dtype = get_dtype(dtype)
+        self.dtype = str_to_dtype(dtype)
 
     def to_device(self, x: torch.Tensor):
         if self.device_name == "cuda":
@@ -166,9 +165,9 @@ class Backend:
             )
             import torch.utils._pytree as pytree
 
-#            debug_timer seems to cause problems:
-#            TypeError: TestOptions.__init__() got an unexpected keyword argument 'debug_timer'
-#            opts = TestOptions(debug_timer=False, use_kernels=True)
+            #            debug_timer seems to cause problems:
+            #            TypeError: TestOptions.__init__() got an unexpected keyword argument 'debug_timer'
+            #            opts = TestOptions(debug_timer=False, use_kernels=True)
             opts = TestOptions(use_kernels=True)
             module = jit(
                 model,
@@ -222,3 +221,145 @@ class Backend:
             raise NotImplementedError("Openvino not ready yet.")
         else:
             raise ValueError(f"Unknown execution device {device_name}.")
+
+
+class ConcreteBenchmark:
+    def __init__(self) -> None:
+        super().__init__()
+
+    def check_fields(self):
+        try:
+            self.net is not None
+            self.in_shape is not None
+            self.dataset is not None
+            self.batch_size is not None
+            # TODO check, that net takes elem from testloader
+        except AttributeError as attr_err:
+            raise RuntimeError(
+                "Required fields are not initilized in nested class. \nOriginal attr err: "
+                + str(attr_err)
+            )
+
+    def compile(self, sample, backend: Backend):
+        self.net = backend.prepare_eval_model(self.net, sample_input=sample)
+        return
+
+    def inference(self, backend: Backend):
+        self.check_fields()
+
+        test_loader = torch.utils.data.DataLoader(
+            self.dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=4,
+            pin_memory=backend.device_name == "cuda",
+        )
+
+        tm = TimerManager()
+
+        self.flops_per_sample = get_macs(self.net, self.in_shape, backend) * 2
+
+        sample = next(iter(test_loader))
+        self.compile(sample, backend)
+
+        print("Warmup started")
+        with torch.no_grad():
+            self.net.eval()
+            with tm.timeit("warmup_s"):
+                sample = backend.to_device(sample)
+                self.net(sample)
+                self.net(sample)
+                self.net(sample)
+        print("Warmup done")
+
+        n_items = 0
+
+        self.net.eval()
+        current_outs = [None] * len(test_loader)
+        with torch.no_grad():
+            start = time.perf_counter()
+            with tm.timeit("duration_s"):
+                for i, x in enumerate(test_loader):
+                    x = backend.to_device(x)
+                    if backend.dtype != torch.float32:
+                        print("dtype: ", backend.dtype)
+                        with torch.autocast(
+                            device_type=backend.device_name,
+                            dtype=backend.dtype,
+                        ):
+                            outputs = self.net(x)
+                    else:
+                        outputs = self.net(x)
+
+                    n_items += len(x)
+                    current_outs[i] = outputs
+
+                    # early stopping
+                    if (
+                        (time.perf_counter() - start) > self.min_seconds
+                        and n_items > self.batch_size * self.min_batches
+                    ):
+                        break
+
+        print(f"{n_items} were processed in {tm.name2time['duration_s']}s")
+
+        results = tm.get_results()
+        results["samples_per_s"] = n_items / results["duration_s"]
+        results["flops_per_sample"] = self.flops_per_sample
+
+        return results, current_outs
+
+
+def get_cifar_loaders(train_batch_size, inf_batch_size):
+    import torchvision
+    import torchvision.transforms as transforms
+
+    n_chans_in = 3072
+    n_chans_out = 10
+
+    transform = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize((0.0, 0.0, 0.0), (1, 1, 1)),
+        ]
+    )
+
+    trainset = torchvision.datasets.CIFAR10(
+        root="./data", train=True, download=True, transform=transform
+    )
+    trainloader = torch.utils.data.DataLoader(
+        trainset, batch_size=train_batch_size, shuffle=True, num_workers=2
+    )
+
+    testset = torchvision.datasets.CIFAR10(
+        root="./data", train=False, download=True, transform=transform
+    )
+    testloader = torch.utils.data.DataLoader(
+        testset, batch_size=inf_batch_size, shuffle=False, num_workers=2
+    )
+
+    classes = (
+        "plane",
+        "car",
+        "bird",
+        "cat",
+        "deer",
+        "dog",
+        "frog",
+        "horse",
+        "ship",
+        "truck",
+    )
+    return trainloader, testloader
+
+
+def get_macs(model, in_shape, backend):
+    """Calculate MACs, conventional FLOPS = MACs * 2."""
+    from ptflops import get_model_complexity_info
+
+    model.eval()
+    with torch.no_grad():
+        macs, params = get_model_complexity_info(
+            model, in_shape, as_strings=False, print_per_layer_stat=False, verbose=True
+        )
+    return macs
