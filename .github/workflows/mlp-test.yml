@@ -61,5 +61,15 @@ jobs:
               run: |
                   source ${CONDA}/bin/activate ${{ inputs.conda_env }}
                   export ONEDNN_VERBOSE=1
-                  export DL_BENCH_ARGS="--host spr --benchmark mlp --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} -v --url ${{ secrets.DB_URL }}"
+                  case ${{ inputs.runner_labels }} in
+                      *spr*) HOST="spr";;
+                      *amd*) HOST="amd";;
+                      *nvidia*) HOST="cuda";;
+                      *cuda*) HOST="cuda";;
+                      *) HOST="unknown";;
+                  esac
+                  if [[ ${{ inputs.runner_labels }} = *"glados"* ]]; then
+                      URL="--url ${{ secrets.DB_URL }}"
+                  fi
+                  export DL_BENCH_ARGS="--host ${HOST} --benchmark mlp --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} -v ${URL}"
                   source iter.sh
