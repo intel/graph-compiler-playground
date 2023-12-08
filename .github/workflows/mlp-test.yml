@@ -29,15 +29,18 @@ on:
                 required: true
                 default: cpu-proto
                 type: string
+            runner_labels:
+                description: Labels to filter runners
+                required: false
+                default: '["self-hosted", "glados"]'
+                type: string
         secrets:
             DB_URL:
                 required: true
 
 jobs:
     mlp_test:
-        runs-on:
-            - self-hosted
-            - glados
+        runs-on: ${{ inputs.runner_labels }}
         steps:
             - uses: actions/checkout@v4
             - uses: ./.github/actions/initial_setup
@@ -50,9 +53,7 @@ jobs:
             - name: Run MLP test on specific compiler
               shell: bash -el {0}
               run: |
-                  BATCH_SIZE=$(printf "%04d" ${{ matrix.batch_size }})
                   source ${CONDA}/bin/activate ${{ inputs.conda_env }}
-
                   export ONEDNN_VERBOSE=1
                   export DL_BENCH_ARGS="--host spr --benchmark mlp --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} -v --url ${{ secrets.DB_URL }}"
                   source iter.sh

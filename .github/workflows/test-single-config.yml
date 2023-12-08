@@ -55,7 +55,12 @@ on:
                 description: Torch-MLIR branch to checkout
                 required: true
                 default: cpu-proto
-
+            runner_labels:
+                description: Labels to filter runners
+                required: false
+                default: '["self-hosted", "glados"]'
+                type: string
+    
 jobs:
     mlp_test:
         uses: ./.github/workflows/mlp-test.yml
@@ -64,7 +69,7 @@ jobs:
             compiler: ${{ inputs.compiler }}
             device: ${{ inputs.device }}
             tag: ${{ inputs.tag }}
-            dtype: ${{ inputs.dtype }}
+#            dtype: ${{ inputs.dtype }}
             torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
             torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
         secrets:

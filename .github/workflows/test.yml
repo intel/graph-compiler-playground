@@ -16,7 +16,12 @@ on:
                 description: Torch-MLIR branch to checkout
                 required: true
                 default: cpu-proto
-
+            runner_labels:
+                description: Labels to filter runners
+                required: false
+                default: '["self-hosted", "glados"]'
+                type: string
+    
 jobs:
     mlp_test:
         strategy:
