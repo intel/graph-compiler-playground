@@ -39,6 +39,12 @@ on:
                 required: true
 
 jobs:
+    myJob:
+        runs-on: Linux
+        steps:
+            - name: Print Inputs
+              run: echo "${{ toJSON(github.event.inputs) }}"
+
     mlp_test:
         runs-on: ${{ inputs.runner_labels }}
         steps:

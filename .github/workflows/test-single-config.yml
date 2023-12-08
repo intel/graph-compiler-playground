@@ -62,6 +62,11 @@ on:
                 type: string
     
 jobs:
+    myJob:
+        runs-on: Linux
+        steps:
+            - name: Print Inputs
+              run: echo "${{ toJSON(github.event.inputs) }}"
     mlp_test:
         uses: ./.github/workflows/mlp-test.yml
         with:

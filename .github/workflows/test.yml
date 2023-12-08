@@ -23,6 +23,11 @@ on:
                 type: string
     
 jobs:
+    myJob:
+        runs-on: Linux
+        steps:
+            - name: Print Inputs
+              run: echo "${{ toJSON(github.event.inputs) }}"
     mlp_test:
         strategy:
             matrix:
