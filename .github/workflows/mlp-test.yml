@@ -92,7 +92,7 @@ jobs:
             - name: Shutdown AWS cloud runner
               if: contains(fromJSON(inputs.runner_labels), 'aws') && inputs.shutdown_cloud_runner
               shell: bash -el {0}
-              run: sudo shutdown -h 0
+              run: sudo shutdown -h +2
     
     parse_results:
         runs-on: [self-hosted, glados]
