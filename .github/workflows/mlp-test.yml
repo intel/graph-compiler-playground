@@ -61,7 +61,7 @@ jobs:
               run: |
                   source ${CONDA}/bin/activate ${{ inputs.conda_env }}
                   export ONEDNN_VERBOSE=1
-                  LABELS="${{ inputs.runner_labels }}"
+                  LABELS='${{ inputs.runner_labels }}'
                   case "${LABELS}" in
                       *spr*) HOST="spr";;
                       *amd*) HOST="amd";;
@@ -69,8 +69,15 @@ jobs:
                       *cuda*) HOST="cuda";;
                       *) HOST="unknown";;
                   esac
-                  if [[ "${LABELS}" = *"glados"* ]]; then
+                  if [[ ${LABELS} = *glados* ]]; then
                       URL="--url ${{ secrets.DB_URL }}"
                   fi
                   export DL_BENCH_ARGS="--host ${HOST} --benchmark mlp --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} -v ${URL}"
                   source iter.sh
+
+            - name: Upload results.db to artifacts when running in AWS
+              if: contains(fromJSON(inputs.runner_labels), 'aws')
+              uses: actions/upload-artifact@v2
+              with:
+                  name: results.db
+                  path: results.db
