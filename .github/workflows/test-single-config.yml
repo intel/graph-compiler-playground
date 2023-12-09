@@ -58,7 +58,7 @@ on:
             runner_labels:
                 description: Labels to filter runners
                 required: false
-                default: '["self-hosted", "glados"]'
+                default: '["self-hosted", "spr", "glados"]'
                 type: string
     
 jobs:

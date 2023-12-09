@@ -32,8 +32,13 @@ on:
             runner_labels:
                 description: Labels to filter runners
                 required: false
-                default: '["self-hosted", "glados"]'
+                default: '["self-hosted", "spr", "glados"]'
                 type: string
+            shutdown_cloud_runner:
+                description: Whether to shutdown AWS cloud runner
+                required: false
+                default: true
+                type: boolean
         secrets:
             DB_URL:
                 required: true
@@ -67,6 +72,8 @@ jobs:
                       *amd*) HOST="amd";;
                       *nvidia*) HOST="cuda";;
                       *cuda*) HOST="cuda";;
+                      *glados*) HOST="unknown_glados";;
+                      *aws*) HOST="unknown_aws";;
                       *) HOST="unknown";;
                   esac
                   if [[ ${LABELS} = *glados* ]]; then
@@ -81,3 +88,23 @@ jobs:
               with:
                   name: results.db
                   path: results.db
+
+            - name: Shutdown AWS cloud runner
+              if: contains(fromJSON(inputs.runner_labels), 'aws') && inputs.shutdown_cloud_runner
+              shell: bash -el {0}
+              run: sudo shutdown -h 0
+    
+    parse_results:
+        runs-on: [self-hosted, glados]
+        if: contains(fromJSON(inputs.runner_labels), 'aws')
+        needs: mlp_test
+        steps:
+            - name: Download results.db from artifacts
+              uses: actions/download-artifact@v2
+              with:
+                  name: results.db
+                  path: results.db 
+            
+            - name: Upload results into DB
+              shell: bash -el {0}
+              run: ls -l results.db
