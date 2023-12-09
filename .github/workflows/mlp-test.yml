@@ -84,7 +84,7 @@ jobs:
 
             - name: Upload results.db to artifacts when running in AWS
               if: contains(fromJSON(inputs.runner_labels), 'aws')
-              uses: actions/upload-artifact@v2
+              uses: actions/upload-artifact@v3
               with:
                   name: results.db
                   path: results.db
@@ -100,7 +100,7 @@ jobs:
         needs: mlp_test
         steps:
             - name: Download results.db from artifacts
-              uses: actions/download-artifact@v2
+              uses: actions/download-artifact@v3
               with:
                   name: results.db
                   path: results.db 
