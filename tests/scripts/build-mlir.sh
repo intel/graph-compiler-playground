@@ -6,6 +6,7 @@ fi
 
 
 cd $1
+git submodule update --recursive
 git submodule foreach --recursive 'git fetch --tags'
 
 ${CONDA}/bin/conda env create -n mlir -f conda-dev-env.yml
