@@ -9,7 +9,7 @@ CNNS=(vgg1 resnet50 resnext50 resnext101 densenet121 efficientnet_v2m mobilenet_
 for name in "${CNNS[@]}"
 do
     echo "Benchmark $name"
-    benchmark-run -b cnn -p "name='${name}',batch_size=32" --benchmark_desc "${size}_bs32" ${DL_BENCH_ARGS} || echo Failed
+    benchmark-run -b cnn -p "name='${name}',batch_size=32" --benchmark_desc "${name}_bs32" ${DL_BENCH_ARGS} || echo Failed
 done
 
 echo "Bfloat16 on size5"
