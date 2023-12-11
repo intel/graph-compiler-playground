@@ -6,6 +6,7 @@ fi
 
 
 cd $1
+git submodule init
 git submodule update --recursive --init
 git submodule foreach --recursive 'git fetch --tags'
 
