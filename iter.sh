@@ -5,11 +5,11 @@ if [[ -z "${DL_BENCH_ARGS}" ]]; then
   exit 1
 fi
 
-echo "CNN"
-for size in resnet18
+CNNS=(vgg1 resnet50 resnext50 resnext101 densenet121 efficientnet_v2m mobilenet_v3_large)
+for name in "${CNNS[@]}"
 do
-    echo "Benchmark $size"
-    benchmark-run -b cnn -p "name='${size}',batch_size=32" --benchmark_desc "${size}_bs32" ${DL_BENCH_ARGS} || echo Failed
+    echo "Benchmark $name"
+    benchmark-run -b cnn -p "name='${name}',batch_size=32" --benchmark_desc "${size}_bs32" ${DL_BENCH_ARGS} || echo Failed
 done
 
 echo "Bfloat16 on size5"

@@ -6,11 +6,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
-from torchvision.models import resnet18, resnet50, ResNet50_Weights
 
 from dl_bench.utils import Backend, Benchmark, TimerManager
 
-from dl_bench.mlp import RandomClsDataset, get_random_loaders, get_cifar_loaders
+from dl_bench.mlp import get_macs
 
 
 def get_time():
@@ -18,32 +17,51 @@ def get_time():
 
 
 # PARAMS
+class RandomInfDataset(Dataset):
+    def __init__(self, n, in_shape):
+        super().__init__()
+
+        self.values = np.random.randn(n, *in_shape).astype(np.float32)
+
+    def __len__(self):
+        return len(self.values)
+
+    def __getitem__(self, index):
+        return self.values[index]
+
+
+def get_inf_loaders(n, in_shape, batch_size, device: str):
+    # This speeds up data copy for cuda devices
+    pin_memory = device == "cuda"
+
+    ds = RandomInfDataset(n, in_shape)
+    train_loader = DataLoader(
+        ds, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=pin_memory
+    )
+    test_loader = DataLoader(
+        ds, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=pin_memory
+    )
+    return train_loader, test_loader
 
 
 def get_cnn(name):
+    from torchvision.models import vgg16, resnet18, resnet50, resnext50_32x4d, resnext101_32x8d, densenet121, efficientnet_v2_m, mobilenet_v3_large
+
     name2model = {
+        'vgg16': vgg16,
         'resnet18': resnet18,
         'resnet50': resnet50,
+        'resnext50': resnext50_32x4d,
+        'resnext101': resnext101_32x8d,
+        'densenet121': densenet121,
+        'efficientnet_v2m': efficientnet_v2_m,
+        'mobilenet_v3_large': mobilenet_v3_large,
     }
     if name in name2model:
         return name2model[name]()
     else:
         raise ValueError(f"Unknown name {name}")
 
-def get_macs(name, in_shape, backend):
-    """Calculate MACs, conventional FLOPS = MACs * 2."""
-    # from thop import profile
-
-    # sample = torch.rand(1, *in_shape)
-
-    # model.eval()
-    # with torch.no_grad():
-    #     macs, params = profile(model, inputs=(sample,), report_missing=True)
-    return {'resnet18': 1.82 * 2 * 1e9,
-            'resnet50': 4.14 * 2 * 1e9}[name]
-
-
-    return macs
 
 def build_mlp(
     n_chans_in: int,
@@ -82,8 +100,7 @@ def get_mlp(n_chans_in, n_chans_out, name):
     return net
 
 
-IN_SHAPE = (3, 250, 250)
-N_CLASSES = 1000
+IN_SHAPE = (3, 224, 224)
 
 class CnnBenchmark(Benchmark):
     def run(self, backend: Backend, params):
@@ -94,20 +111,19 @@ class CnnBenchmark(Benchmark):
         batch_size = int(params.get("batch_size", 1024))
 
         # Do early stopping once we hit min_batches & min_seconds to accelerate measurement
-        min_batches = 3
+        min_batches = 10
         min_seconds = 10
         DATASET_SIZE = max(10_240, batch_size * min_batches)
 
-        trainloader, testloader = get_random_loaders(
+        trainloader, testloader = get_inf_loaders(
             DATASET_SIZE,
             in_shape=IN_SHAPE,
-            n_classes=N_CLASSES,
             batch_size=batch_size,
             device=backend.device_name,
         )
         net = get_cnn(name=name)
         # flops_per_sample = get_macs(net, IN_SHAPE, backend) * 2
-        flops_per_sample = get_macs(name, IN_SHAPE, backend) * 2
+        flops_per_sample = 2 * get_macs(net, IN_SHAPE, backend)
 
         sample = backend.to_device(torch.rand(batch_size, *IN_SHAPE))
         net = backend.prepare_eval_model(net, sample_input=sample)
@@ -126,24 +142,18 @@ class CnnBenchmark(Benchmark):
         with torch.no_grad():
             start = time.perf_counter()
             with tm.timeit("duration_s"):
-                for x, y in testloader:
+                for x in testloader:
                     x = backend.to_device(x)
-                    y = backend.to_device(y)
                     if backend.dtype == torch.float32:
                         output = net(x)
                         assert output.dtype is backend.dtype, f"{output.dtype}!={backend.dtype}"
                         _, predicted = torch.max(output.data, 1)
 
-                        total += y.size(0)
-                        correct += (predicted == y).sum().item()
                     else:
                         with torch.autocast(device_type=backend.device_name, dtype=backend.dtype):
                             output = net(x)
                             assert output.dtype is backend.dtype, f"{output.dtype}!={backend.dtype}"
                             _, predicted = torch.max(output.data, 1)
-
-                            total += y.size(0)
-                            correct += (predicted == y).sum().item()
 
                     n_items += len(x)
 
