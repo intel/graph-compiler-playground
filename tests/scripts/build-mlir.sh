@@ -7,7 +7,7 @@ fi
 
 cd $1
 
-${CONDA}/bin/conda env create -n mlir -f conda-dev-env.yml.yml
+${CONDA}/bin/conda env create -n mlir -f conda-dev-env.yml
 ${CONDA}/bin/conda install -n mlir -y pip
 source ${CONDA}/bin/activate mlir
 
