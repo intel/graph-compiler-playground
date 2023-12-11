@@ -44,7 +44,7 @@ runs:
                   ${{ env.CACHE_NUMBER }}
 
         - name: Update conda env for non-mlir environments
-          if: steps.conda-cache.outputs.cache-hit != 'true' && ${{ inputs.conda_env != 'mlir' }}
+          if: steps.conda-cache.outputs.cache-hit != 'true' && inputs.conda_env != 'mlir'
           shell: bash -el {0}
           run: ${CONDA}/bin/conda env update --solver libmamba -n ${{ inputs.conda_env }} -f tests/conda-envs/${{ inputs.conda_env }}.yaml
 
