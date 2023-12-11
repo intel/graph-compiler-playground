@@ -5,7 +5,7 @@ if [[ -z "${DL_BENCH_ARGS}" ]]; then
   exit 1
 fi
 
-CNNS=(vgg1 resnet50 resnext50 resnext101 densenet121 efficientnet_v2m mobilenet_v3_large)
+CNNS=(vgg16 resnet50 resnext50 resnext101 densenet121 efficientnet_v2m mobilenet_v3_large)
 for name in "${CNNS[@]}"
 do
     echo "Benchmark $name"

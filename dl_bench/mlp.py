@@ -123,7 +123,7 @@ def get_macs(model, in_shape, backend):
     model.eval()
     with torch.no_grad():
         macs, params = get_model_complexity_info(model, in_shape, as_strings=False,
-                                                 print_per_layer_stat=True, verbose=True)
+                                                 print_per_layer_stat=False, verbose=True)
     return macs
 
 
