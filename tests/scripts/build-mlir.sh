@@ -9,6 +9,7 @@ cd $1
 
 ${CONDA}/bin/conda env create -n mlir -f conda-dev-env.yml.yml
 source ${CONDA}/bin/activate mlir
+conda install pip
 
 pip install -r requirements.txt
 
