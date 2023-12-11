@@ -13,4 +13,4 @@ source ${CONDA}/bin/activate mlir
 
 pip install -r requirements.txt
 
-source utils/build-with-imex.sh
+bash ./utils/build-with-imex.sh
