@@ -5,7 +5,7 @@ if [[ -z "${DL_BENCH_ARGS}" ]]; then
   exit 1
 fi
 
-CNNS=(vgg16 resnet50 resnext50 resnext101 densenet121 efficientnet_v2m mobilenet_v3_large)
+CNNS=(vgg16 resnet18 resnet50 resnext50 resnext101 densenet121 efficientnet_v2m mobilenet_v3_large)
 for BS in 0032 0128
 do
     for name in "${CNNS[@]}"
