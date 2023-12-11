@@ -50,7 +50,6 @@ jobs:
             - name: Run MLP test on specific compiler
               shell: bash -el {0}
               run: |
-                  BATCH_SIZE=$(printf "%04d" ${{ matrix.batch_size }})
                   source ${CONDA}/bin/activate ${{ inputs.conda_env }}
 
                   export ONEDNN_VERBOSE=1
