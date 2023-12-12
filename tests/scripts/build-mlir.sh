@@ -14,5 +14,7 @@ ${CONDA}/bin/conda install -n mlir -y pip
 source ${CONDA}/bin/activate mlir
 
 pip install -r requirements.txt
+# Need torchvision for CNN benchmarks
+pip install -r torchvision-requirements.txt
 
 bash ./utils/build-with-imex.sh

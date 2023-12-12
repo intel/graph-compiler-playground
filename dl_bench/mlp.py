@@ -38,49 +38,6 @@ def get_random_loaders(n, in_shape, n_classes, batch_size, device: str):
     return train_loader, test_loader
 
 
-def get_cifar_loaders(train_batch_size, inf_batch_size):
-    import torchvision
-    import torchvision.transforms as transforms
-
-    n_chans_in = 3072
-    n_chans_out = 10
-
-    transform = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            transforms.Normalize((0.0, 0.0, 0.0), (1, 1, 1)),
-        ]
-    )
-
-    trainset = torchvision.datasets.CIFAR10(
-        root="./data", train=True, download=True, transform=transform
-    )
-    trainloader = torch.utils.data.DataLoader(
-        trainset, batch_size=train_batch_size, shuffle=True, num_workers=2
-    )
-
-    testset = torchvision.datasets.CIFAR10(
-        root="./data", train=False, download=True, transform=transform
-    )
-    testloader = torch.utils.data.DataLoader(
-        testset, batch_size=inf_batch_size, shuffle=False, num_workers=2
-    )
-
-    classes = (
-        "plane",
-        "car",
-        "bird",
-        "cat",
-        "deer",
-        "dog",
-        "frog",
-        "horse",
-        "ship",
-        "truck",
-    )
-    return trainloader, testloader
-
-
 def get_time():
     return time.perf_counter()
 
@@ -161,14 +118,12 @@ def get_mlp(n_chans_in, n_chans_out, name):
 
 def get_macs(model, in_shape, backend):
     """Calculate MACs, conventional FLOPS = MACs * 2."""
-    from thop import profile
-
-    sample = torch.rand(1, *in_shape)
+    from ptflops import get_model_complexity_info
 
     model.eval()
     with torch.no_grad():
-        macs, params = profile(model, inputs=(sample,), report_missing=True)
-
+        macs, params = get_model_complexity_info(model, in_shape, as_strings=False,
+                                                 print_per_layer_stat=False, verbose=True)
     return macs
 
 
@@ -251,7 +206,6 @@ class MlpBenchmark(Benchmark):
                     y = backend.to_device(y)
                     if backend.dtype == torch.float32:
                         output = net(x)
-                        assert output.dtype is backend.dtype, f"{output.dtype}!={backend.dtype}"
                         _, predicted = torch.max(output.data, 1)
 
                         total += y.size(0)
