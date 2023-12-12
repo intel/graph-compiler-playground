@@ -5,15 +5,6 @@ if [[ -z "${DL_BENCH_ARGS}" ]]; then
   exit 1
 fi
 
-CNNS=(vgg16 resnet18 resnet50 resnext50 resnext101 densenet121 efficientnet_v2m mobilenet_v3_large)
-for BS in 0001 0032 0128
-do
-    for name in "${CNNS[@]}"
-    do
-        echo "Benchmark $name"
-        benchmark-run -b cnn -p "name='${name}',batch_size='$BS'" --benchmark_desc "${name}_bs$BS" ${DL_BENCH_ARGS} || echo Failed
-    done
-done
 
 echo "Bfloat16 on size5"
 benchmark-run -b mlp -p "name='size5',batch_size=1024" --benchmark_desc "size5_bs1024_bfloat16" --dtype bfloat16 ${DL_BENCH_ARGS} || echo Failed
@@ -32,4 +23,14 @@ do
     echo "Benchmark $size"
     BATCH_SIZE_TXT=$(printf "%04d" $BATCH_SIZE)
     benchmark-run -b mlp -p "name='${size}',batch_size=${BATCH_SIZE}" --benchmark_desc "${size}_bs${BATCH_SIZE_TXT}" ${DL_BENCH_ARGS} || echo Failed
+done
+
+CNNS=(vgg16 resnet18 resnet50 resnext50 resnext101 densenet121 efficientnet_v2m mobilenet_v3_large)
+for BS in 0001 0032 0128
+do
+    for name in "${CNNS[@]}"
+    do
+        echo "Benchmark $name"
+        benchmark-run -b cnn -p "name='${name}',batch_size='$BS'" --benchmark_desc "${name}_bs$BS" ${DL_BENCH_ARGS} || echo Failed
+    done
 done
