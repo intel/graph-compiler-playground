@@ -1,0 +1,71 @@
+name: Run MLP test in one configuration
+
+on:
+    workflow_dispatch:
+        inputs:
+            env:
+                description: Conda env to use to run the test
+                required: true
+                default: mlir
+                type: choice
+                options:
+                    - mlir
+                    - cpu
+                    - ipex
+                    - cuda
+            device:
+                description: Device to use to execute the test
+                required: true
+                default: cpu
+                type: choice
+                options:
+                    - cpu
+                    - xpu
+                    - cuda
+            compiler:
+                description: JIT compiler to use to execute the test
+                required: true
+                default: torch_mlir
+                type: choice
+                options:
+                    - torch
+                    - dynamo
+                    - torchscript
+                    - torchscript_onednn
+                    - ipex
+                    - torch_mlir
+            dtype:
+                description: Dtype to use
+                required: true
+                default: float32
+                type: choice
+                options:
+                    - float32
+                    - bfloat16
+            tag:
+                description: tag to label this run in DB
+                required: true
+                default: "test"
+            torch_mlir_repo:
+                description: Torch-MLIR repository on github
+                required: true
+                default: intel-ai/torch-mlir
+                type: string
+            torch_mlir_branch:
+                description: Torch-MLIR branch to checkout
+                required: true
+                default: cpu-proto
+
+jobs:
+    mlp_test:
+        uses: ./.github/workflows/mlp-test.yml
+        with:
+            conda_env: ${{ inputs.env }}
+            compiler: ${{ inputs.compiler }}
+            device: ${{ inputs.device }}
+            tag: ${{ inputs.tag }}
+            dtype: ${{ inputs.dtype }}
+            torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
+            torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
+        secrets:
+            DB_URL: ${{ secrets.DB_URL }}

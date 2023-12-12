@@ -1,0 +1,32 @@
+name: Build torch-mlir
+description: Checkout torch-mlir repo and build it in mlir-test conda env
+
+inputs:
+    torch_mlir_repo:
+        description: Torch-MLIR repository on github
+        required: true
+        default: intel-ai/torch-mlir
+        type: string
+    torch_mlir_branch:
+        description: Torch-MLIR branch to checkout
+        required: true
+        default: cpu-proto
+        type: string
+
+runs:
+    using: composite
+    steps:
+        - name: Checkout torch-mlir repo
+          uses: actions/checkout@v4
+          with:
+              repository: ${{ inputs.torch_mlir_repo }}
+              path: torch-mlir
+              ref: ${{ inputs.torch_mlir_branch }}
+              submodules: recursive
+        - name: Build torch-mlir
+          shell: bash -el {0}
+          run: |
+              source /opt/intel/oneapi/setvars.sh
+              tests/scripts/build-mlir.sh torch-mlir
+              echo PYTHONPATH=`pwd`/torch-mlir/build/tools/torch-mlir/python_packages/torch_mlir:`pwd`/torch-mlir/examples:$PYTHONPATH >> $GITHUB_ENV
+              echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH >> $GITHUB_ENV

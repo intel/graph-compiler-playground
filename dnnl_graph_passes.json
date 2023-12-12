@@ -1,0 +1,720 @@
+{
+  "version": "3.3.0",
+  "hash": "e280747c0ff5efe6bcf86dcf7e6a0c1c3b1709c0",
+  "passes": [
+    {
+      "pass_name": "int8_resnext101_backbone_fusion",
+      "pass_backend": "dnnl",
+      "priority": 23,
+      "enable": 1,
+      "kind": "quantized_residual_conv_blocks"
+    }, 
+    {
+      "pass_name": "itex_int8_resnet50_stage_3_fusion",
+      "pass_backend": "dnnl",
+      "priority": 22.3,
+      "enable": 1,
+      "kind": "quantized_residual_conv_blocks"
+    }, 
+    {
+      "pass_name": "int8_resnet50_stage_3_fusion",
+      "pass_backend": "dnnl",
+      "priority": 22.2,
+      "enable": 1,
+      "kind": "quantized_residual_conv_blocks"
+    }, 
+    {
+      "pass_name": "int8_resnet34_stage_3_fusion",
+      "pass_backend": "dnnl",
+      "priority": 22.2,
+      "enable": 1,
+      "kind": "quantized_residual_conv_blocks"
+    }, 
+    {
+      "pass_name": "f32_resnet50_stage_3_fusion",
+      "pass_backend": "dnnl",
+      "priority": 22.2,
+      "enable": 1,
+      "kind": "residual_conv_blocks"
+    }, 
+    {
+      "pass_name": "itex_int8_resnet50_stage_2_fusion",
+      "pass_backend": "dnnl",
+      "priority": 22.2,
+      "enable": 1,
+      "kind": "quantized_residual_conv_blocks"
+    }, 
+    {
+      "pass_name": "int8_resnet50_stage_2_fusion",
+      "pass_backend": "dnnl",
+      "priority": 22.1,
+      "enable": 1,
+      "kind": "quantized_residual_conv_blocks"
+    }, 
+    {
+      "pass_name": "int8_resnet34_stage_2_fusion",
+      "pass_backend": "dnnl",
+      "priority": 22.1,
+      "enable": 1,
+      "kind": "quantized_residual_conv_blocks"
+    }, 
+    {
+      "pass_name": "f32_resnet50_stage_2_fusion",
+      "pass_backend": "dnnl",
+      "priority": 22.1,
+      "enable": 1,
+      "kind": "residual_conv_blocks"
+    }, 
+    {
+      "pass_name": "itex_int8_resnet50_stage_1_fusion",
+      "pass_backend": "dnnl",
+      "priority": 22.1,
+      "enable": 1,
+      "kind": "quantized_residual_conv_blocks"
+    }, 
+    {
+      "pass_name": "itex_int8_resnet50_stage_4_fusion",
+      "pass_backend": "dnnl",
+      "priority": 22.1,
+      "enable": 1,
+      "kind": "quantized_residual_conv_blocks"
+    }, 
+    {
+      "pass_name": "int8_resnet50_stage_1_4_fusion",
+      "pass_backend": "dnnl",
+      "priority": 22,
+      "enable": 1,
+      "kind": "quantized_residual_conv_blocks"
+    }, 
+    {
+      "pass_name": "int8_resnet34_stage_1_4_fusion",
+      "pass_backend": "dnnl",
+      "priority": 22,
+      "enable": 1,
+      "kind": "quantized_residual_conv_blocks"
+    }, 
+    {
+      "pass_name": "f32_resnet50_stage_1_4_fusion",
+      "pass_backend": "dnnl",
+      "priority": 22,
+      "enable": 1,
+      "kind": "residual_conv_blocks"
+    }, 
+    {
+      "pass_name": "int8_sdp_fusion",
+      "pass_backend": "dnnl",
+      "priority": 22,
+      "enable": 1,
+      "kind": "quantized_sdp"
+    }, 
+    {
+      "pass_name": "int8_bf16_sdp_fusion",
+      "pass_backend": "dnnl",
+      "priority": 22,
+      "enable": 1,
+      "kind": "quantized_sdp"
+    }, 
+    {
+      "pass_name": "float_sdp_fusion",
+      "pass_backend": "dnnl",
+      "priority": 21,
+      "enable": 1,
+      "kind": "sdp"
+    }, 
+    {
+      "pass_name": "x8s8x8_conv_add_post_ops_cpu",
+      "pass_backend": "dnnl",
+      "priority": 10.6,
+      "enable": 1,
+      "kind": "quantized_convolution_post_ops"
+    }, 
+    {
+      "pass_name": "x8s8x8_conv_add_post_ops_gpu",
+      "pass_backend": "dnnl",
+      "priority": 10.6,
+      "enable": 1,
+      "kind": "quantized_convolution_post_ops"
+    }, 
+    {
+      "pass_name": "x8s8x_conv_reshape_post_ops",
+      "pass_backend": "dnnl",
+      "priority": 10.6,
+      "enable": 1,
+      "kind": "quantized_convolution_post_ops"
+    }, 
+    {
+      "pass_name": "x8s8x_tc_conv_add_post_ops_cpu",
+      "pass_backend": "dnnl",
+      "priority": 10.6,
+      "enable": 1,
+      "kind": "quantized_convolution_post_ops"
+    }, 
+    {
+      "pass_name": "x8s8x_tc_conv_add_post_ops_gpu",
+      "pass_backend": "dnnl",
+      "priority": 10.6,
+      "enable": 1,
+      "kind": "quantized_convolution_post_ops"
+    }, 
+    {
+      "pass_name": "int8_convtranspose_add_post_ops_fusion_cpu",
+      "pass_backend": "dnnl",
+      "priority": 10.6,
+      "enable": 1,
+      "kind": "quantized_convtranspose_post_ops"
+    }, 
+    {
+      "pass_name": "int8_convtranspose_add_post_ops_fusion_gpu",
+      "pass_backend": "dnnl",
+      "priority": 10.6,
+      "enable": 1,
+      "kind": "quantized_convtranspose_post_ops"
+    }, 
+    {
+      "pass_name": "x8s8x_conv_post_ops",
+      "pass_backend": "dnnl",
+      "priority": 10.5,
+      "enable": 1,
+      "kind": "quantized_convolution_post_ops"
+    }, 
+    {
+      "pass_name": "x8s8x_tc_conv_post_ops",
+      "pass_backend": "dnnl",
+      "priority": 10.5,
+      "enable": 1,
+      "kind": "quantized_convolution_post_ops"
+    }, 
+    {
+      "pass_name": "int8_convtranspose_post_ops_fusion_cpu",
+      "pass_backend": "dnnl",
+      "priority": 10.5,
+      "enable": 1,
+      "kind": "quantized_convtranspose_post_ops"
+    }, 
+    {
+      "pass_name": "int8_convtranspose_post_ops_fusion_gpu",
+      "pass_backend": "dnnl",
+      "priority": 10.5,
+      "enable": 1,
+      "kind": "quantized_convtranspose_post_ops"
+    }, 
+    {
+      "pass_name": "x8x8x8_tc_matmul_add_post_ops_cpu",
+      "pass_backend": "dnnl",
+      "priority": 10.5,
+      "enable": 1,
+      "kind": "quantized_matmul_post_ops"
+    }, 
+    {
+      "pass_name": "x8s8x8_tc_matmul_add_post_ops_gpu",
+      "pass_backend": "dnnl",
+      "priority": 10.5,
+      "enable": 1,
+      "kind": "quantized_matmul_post_ops"
+    }, 
+    {
+      "pass_name": "x8x8x8_tc_matmul_reshape_transpose_reshape",
+      "pass_backend": "dnnl",
+      "priority": 10.5,
+      "enable": 1,
+      "kind": "quantized_matmul_post_ops"
+    }, 
+    {
+      "pass_name": "x8x8x_tc_matmul_transpose_reorder",
+      "pass_backend": "dnnl",
+      "priority": 10.5,
+      "enable": 1,
+      "kind": "quantized_matmul_post_ops"
+    }, 
+    {
+      "pass_name": "convtranspose_post_ops_fusion",
+      "pass_backend": "dnnl",
+      "priority": 10.4,
+      "enable": 1,
+      "kind": "convtranspose_post_ops"
+    }, 
+    {
+      "pass_name": "x8x8x_tc_matmul_post_ops_cpu",
+      "pass_backend": "dnnl",
+      "priority": 10.4,
+      "enable": 1,
+      "kind": "quantized_matmul_post_ops"
+    }, 
+    {
+      "pass_name": "x8s8x_tc_matmul_post_ops_gpu",
+      "pass_backend": "dnnl",
+      "priority": 10.4,
+      "enable": 1,
+      "kind": "quantized_matmul_post_ops"
+    }, 
+    {
+      "pass_name": "fp_conv_postops_depthwise_postops_cpu",
+      "pass_backend": "dnnl",
+      "priority": 10.3,
+      "enable": 1,
+      "kind": "convolution_post_ops"
+    }, 
+    {
+      "pass_name": "int8_reorder_sum_fusion_cpu",
+      "pass_backend": "dnnl",
+      "priority": 10.2,
+      "enable": 1,
+      "kind": "misc_quantized_post_ops"
+    }, 
+    {
+      "pass_name": "int8_reorder_sum_fusion_gpu",
+      "pass_backend": "dnnl",
+      "priority": 10.2,
+      "enable": 1,
+      "kind": "misc_quantized_post_ops"
+    }, 
+    {
+      "pass_name": "x8_pool_add_post_ops_cpu",
+      "pass_backend": "dnnl",
+      "priority": 10.1,
+      "enable": 1,
+      "kind": "quantized_pooling_post_ops"
+    }, 
+    {
+      "pass_name": "x8_pool_add_post_ops_gpu",
+      "pass_backend": "dnnl",
+      "priority": 10.1,
+      "enable": 1,
+      "kind": "quantized_pooling_post_ops"
+    }, 
+    {
+      "pass_name": "reorder_sum_fusion",
+      "pass_backend": "dnnl",
+      "priority": 10.1,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "int8_reorder_fusion",
+      "pass_backend": "dnnl",
+      "priority": 10.1,
+      "enable": 1,
+      "kind": "misc_quantized_post_ops"
+    }, 
+    {
+      "pass_name": "x8x8x8_matmul_add_post_ops_cpu",
+      "pass_backend": "dnnl",
+      "priority": 10,
+      "enable": 1,
+      "kind": "quantized_matmul_post_ops"
+    }, 
+    {
+      "pass_name": "x8s8x8_matmul_add_post_ops_gpu",
+      "pass_backend": "dnnl",
+      "priority": 10,
+      "enable": 1,
+      "kind": "quantized_matmul_post_ops"
+    }, 
+    {
+      "pass_name": "x8x8x8_matmul_reshape_transpose_reshape",
+      "pass_backend": "dnnl",
+      "priority": 10,
+      "enable": 1,
+      "kind": "quantized_matmul_post_ops"
+    }, 
+    {
+      "pass_name": "x8x8x_matmul_transpose_reorder",
+      "pass_backend": "dnnl",
+      "priority": 10,
+      "enable": 1,
+      "kind": "quantized_matmul_post_ops"
+    }, 
+    {
+      "pass_name": "x8_pool_reshape_transpose",
+      "pass_backend": "dnnl",
+      "priority": 10,
+      "enable": 1,
+      "kind": "quantized_pooling_post_ops"
+    }, 
+    {
+      "pass_name": "x8_pool_post_ops",
+      "pass_backend": "dnnl",
+      "priority": 10,
+      "enable": 1,
+      "kind": "quantized_pooling_post_ops"
+    }, 
+    {
+      "pass_name": "x8x8x_matmul_post_ops_cpu",
+      "pass_backend": "dnnl",
+      "priority": 9.9,
+      "enable": 1,
+      "kind": "quantized_matmul_post_ops"
+    }, 
+    {
+      "pass_name": "x8s8x_matmul_post_ops_gpu",
+      "pass_backend": "dnnl",
+      "priority": 9.9,
+      "enable": 1,
+      "kind": "quantized_matmul_post_ops"
+    }, 
+    {
+      "pass_name": "fp_pool_post_ops",
+      "pass_backend": "dnnl",
+      "priority": 9.9,
+      "enable": 1,
+      "kind": "pooling_post_ops"
+    }, 
+    {
+      "pass_name": "fp_conv_post_ops",
+      "pass_backend": "dnnl",
+      "priority": 9.8,
+      "enable": 1,
+      "kind": "convolution_post_ops"
+    }, 
+    {
+      "pass_name": "fp_conv_bwd_weights_bias",
+      "pass_backend": "dnnl",
+      "priority": 9.7,
+      "enable": 0,
+      "kind": "convolution_backward_post_ops"
+    }, 
+    {
+      "pass_name": "fp_matmul_transpose_reorder",
+      "pass_backend": "dnnl",
+      "priority": 9.1,
+      "enable": 1,
+      "kind": "matmul_post_ops"
+    }, 
+    {
+      "pass_name": "int8_bn_fusion",
+      "pass_backend": "dnnl",
+      "priority": 9,
+      "enable": 1,
+      "kind": "batch_norm_post_ops"
+    }, 
+    {
+      "pass_name": "fp_matmul_reshape_transpose_reshape",
+      "pass_backend": "dnnl",
+      "priority": 9,
+      "enable": 1,
+      "kind": "matmul_post_ops"
+    }, 
+    {
+      "pass_name": "bn_relu_fusion",
+      "pass_backend": "dnnl",
+      "priority": 8.8,
+      "enable": 1,
+      "kind": "batch_norm_post_ops"
+    }, 
+    {
+      "pass_name": "bn_bwd_relu_bwd_fusion",
+      "pass_backend": "dnnl",
+      "priority": 8.8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "fp_matmul_post_ops",
+      "pass_backend": "dnnl",
+      "priority": 8.8,
+      "enable": 1,
+      "kind": "matmul_post_ops"
+    }, 
+    {
+      "pass_name": "interpolate_post_ops_fusion",
+      "pass_backend": "dnnl",
+      "priority": 8.4,
+      "enable": 1,
+      "kind": "interpolate_post_ops"
+    }, 
+    {
+      "pass_name": "reduction_post_ops_fusion",
+      "pass_backend": "dnnl",
+      "priority": 8.4,
+      "enable": 1,
+      "kind": "reduction_post_ops"
+    }, 
+    {
+      "pass_name": "binary_post_ops_fusion",
+      "pass_backend": "dnnl",
+      "priority": 8.3,
+      "enable": 1,
+      "kind": "binary_post_ops"
+    }, 
+    {
+      "pass_name": "reciprocal_multiply_fusion",
+      "pass_backend": "dnnl",
+      "priority": 8.2,
+      "enable": 1,
+      "kind": "binary_post_ops"
+    }, 
+    {
+      "pass_name": "int8_concat_fusion",
+      "pass_backend": "dnnl",
+      "priority": 8.2,
+      "enable": 1,
+      "kind": "misc_quantized_post_ops"
+    }, 
+    {
+      "pass_name": "eltwise_binary_fusion",
+      "pass_backend": "dnnl",
+      "priority": 8.2,
+      "enable": 1,
+      "kind": "unary_post_ops"
+    }, 
+    {
+      "pass_name": "fp_softmax_post_ops",
+      "pass_backend": "dnnl",
+      "priority": 8.2,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "layernorm_post_ops_fusion_cpu",
+      "pass_backend": "dnnl",
+      "priority": 8.2,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "shuffle_fusion",
+      "pass_backend": "dnnl",
+      "priority": 8.2,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "typecast_quantize_fusion",
+      "pass_backend": "dnnl",
+      "priority": 8.1,
+      "enable": 1,
+      "kind": "misc_quantized_post_ops"
+    }, 
+    {
+      "pass_name": "sum_fusion",
+      "pass_backend": "dnnl",
+      "priority": 8.1,
+      "enable": 1,
+      "kind": "binary_post_ops"
+    }, 
+    {
+      "pass_name": "eltwise_fwd_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "eltwise_bwd_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "binary_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "quant_dequant_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "avg_pool_bw_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "bn_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "bn_fw_train_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "bn_bw_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "ln_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "ln_bw_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "concat_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "conv_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "conv_data_bw_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "conv_weights_bwd_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "convtranspose_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "convtranspose_data_bwd_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "convtranspose_weights_bwd_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "matmul_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "max_pool_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "max_pool_bw_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "prelu_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "prelu_bwd_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "logsoftmax_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "logsoftmax_bwd_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "softmax_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "softmax_bwd_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "reorder_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "interpolate_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "interpolate_bwd_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "typecast_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "reduce_pass",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }, 
+    {
+      "pass_name": "fp_avg_pool",
+      "pass_backend": "dnnl",
+      "priority": 8,
+      "enable": 1,
+      "kind": "misc_post_ops"
+    }
+  ]
+}

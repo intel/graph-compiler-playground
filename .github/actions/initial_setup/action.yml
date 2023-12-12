@@ -1,0 +1,62 @@
+name: Initial setup
+description: Setup conda and system environments to run tests
+
+inputs:
+    conda_env:
+        required: true
+        type: string
+        description: Name of conda env
+    compiler:
+        required: true
+        type: string
+        description: Compiler used for execution
+    torch_mlir_repo:
+        description: Torch-MLIR repository on github
+        required: true
+        default: intel-ai/torch-mlir
+        type: string
+    torch_mlir_branch:
+        description: Torch-MLIR branch to checkout
+        required: true
+        default: cpu-proto
+        type: string
+
+runs:
+    using: composite
+    steps:
+        - name: Get Date
+          id: get-date
+          run: echo "today=$(/bin/date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
+          shell: bash
+
+        - name: Restore Conda env cache
+          id: conda-cache
+          uses: actions/cache@v3
+          env:
+              # Increase this value to reset cache if etc/example-environment.yml has not changed
+              CACHE_NUMBER: 2
+          with:
+              path: ${{ env.CONDA }}/envs
+              key: >-
+                  conda-${{ inputs.conda_env }}-
+                  ${{ hashFiles(format('tests/conda-envs/{0}.yaml', inputs.conda_env)) }}-
+                  ${{ steps.get-date.outputs.today }}-
+                  ${{ env.CACHE_NUMBER }}
+
+        - name: Update conda env
+          if: steps.conda-cache.outputs.cache-hit != 'true'
+          shell: bash -el {0}
+          run: ${CONDA}/bin/conda env update --solver libmamba -n ${{ inputs.conda_env }} -f tests/conda-envs/${{ inputs.conda_env }}.yaml
+
+        - name: Build Torch-MLIR from sources
+          if: ${{ inputs.conda_env == 'mlir' }}
+          uses: ./.github/actions/build_mlir
+          with:
+              torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
+              torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
+
+        - name: Setup benchmarks package
+          shell: bash -el {0}
+          run: |
+              source ${CONDA}/bin/activate ${{ inputs.conda_env }}
+              pip install -e .

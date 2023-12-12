@@ -1,0 +1,43 @@
+name: Run tests on multiple platforms
+
+on:
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: tag to label this run in DB
+                required: true
+                default: "test"
+            torch_mlir_repo:
+                description: Torch-MLIR repository on github
+                required: true
+                default: intel-ai/torch-mlir
+                type: string
+            torch_mlir_branch:
+                description: Torch-MLIR branch to checkout
+                required: true
+                default: cpu-proto
+
+jobs:
+    mlp_test:
+        strategy:
+            matrix:
+                type: [
+                  {env: 'cpu', device: 'cpu', compiler: 'torch'},
+                  {env: 'cpu', device: 'cpu', compiler: 'dynamo'},
+                  {env: 'cpu', device: 'cpu', compiler: 'torchscript'},
+                  {env: 'cpu', device: 'cpu', compiler: 'torchscript_onednn'},
+                  {env: 'ipex', device: 'cpu', compiler: 'ipex'},
+#                  {env: 'ipex', device: 'xpu', compiler: 'ipex'},
+                  {env: 'mlir', device: 'cpu', compiler: 'torch_mlir'}
+                ]
+            fail-fast: false
+        uses: ./.github/workflows/mlp-test.yml
+        with:
+            conda_env: ${{ matrix.type.env }}
+            compiler: ${{ matrix.type.compiler }}
+            device: ${{ matrix.type.device }}
+            tag: ${{ inputs.tag }}
+            torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
+            torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
+        secrets:
+            DB_URL: ${{ secrets.DB_URL }}
