@@ -39,13 +39,15 @@ def get_inf_loaders(n, in_shape, batch_size, device: str):
         ds, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=pin_memory
     )
     test_loader = DataLoader(
-        ds, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=pin_memory
+        ds, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=pin_memory
     )
     return train_loader, test_loader
 
 
 def get_cnn(name):
     from torchvision.models import vgg16, resnet18, resnet50, resnext50_32x4d, resnext101_32x8d, densenet121, efficientnet_v2_m, mobilenet_v3_large
+    from torchvision.models.segmentation import fcn_resnet50, lraspp_mobilenet_v3_large, deeplabv3_resnet50
+    from torchvision.models.detection.retinanet import retinanet_resnet50_fpn_v2
 
     name2model = {
         'vgg16': vgg16,
@@ -54,8 +56,16 @@ def get_cnn(name):
         'resnext50': resnext50_32x4d,
         'resnext101': resnext101_32x8d,
         'densenet121': densenet121,
+        # Estimated flops look a bit susp. 24.5G from https://pytorch.org/vision/stable/models.html
+        # but we estimate at 10.9, so after 2x we get 21.8 instead of 24.5G
         'efficientnet_v2m': efficientnet_v2_m,
         'mobilenet_v3_large': mobilenet_v3_large,
+        # Segm
+        'fcn_resnet50': fcn_resnet50,
+        'lraspp_mobilenet_v3_large': lraspp_mobilenet_v3_large,
+        'deeplabv3_resnet50': deeplabv3_resnet50,
+        # Detection
+        'retinanet_resnet50_fpn_v2': retinanet_resnet50_fpn_v2,
     }
     if name in name2model:
         return name2model[name]()
@@ -92,7 +102,7 @@ def build_mlp(
     return nn.Sequential(*layers)
 
 
-def get_mlp(n_chans_in, n_chans_out, name):
+def get_mlp(n_chans_in, n_chans_out, nmoame):
     params = name2params[name]
 
     # net = nn.Sequential(nn.Flatten(), build_mlp(n_chans_in, **params))
@@ -143,6 +153,7 @@ class CnnBenchmark(Benchmark):
             start = time.perf_counter()
             with tm.timeit("duration_s"):
                 for x in testloader:
+                    batch_start = time.perf_counter()
                     x = backend.to_device(x)
                     if backend.dtype == torch.float32:
                         output = net(x)
@@ -156,6 +167,8 @@ class CnnBenchmark(Benchmark):
                             _, predicted = torch.max(output.data, 1)
 
                     n_items += len(x)
+
+                    print("time per batch: {:.2}s".format(time.perf_counter() - batch_start))
 
                     # early stopping
                     if (time.perf_counter() - start) > min_seconds and n_items > batch_size * min_batches:
