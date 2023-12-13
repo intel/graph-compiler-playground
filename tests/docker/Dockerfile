@@ -5,7 +5,7 @@ RUN curl https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCT
     && echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
         | sudo tee /etc/apt/sources.list.d/oneAPI.list \
     && sudo apt-get update --yes \
-    && sudo apt-get install build-essential intel-basekit cmake --yes \
+    && sudo apt-get install build-essential intel-basekit cmake numactl --yes \
     && sudo rm -rf /var/lib/apt/lists/*
 
 ENV CONDA=/opt/conda
