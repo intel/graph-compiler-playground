@@ -65,7 +65,8 @@ jobs:
               shell: bash -el {0}
               run: |
                   source ${CONDA}/bin/activate ${{ inputs.conda_env }}
-                  export ONEDNN_VERBOSE=1
+
+                  export ONEDNN_VERBOSE=0
                   LABELS='${{ inputs.runner_labels }}'
                   case "${LABELS}" in
                       *spr*) HOST="spr";;
@@ -79,7 +80,8 @@ jobs:
                   if [[ ${LABELS} = *glados* ]]; then
                       URL="--url ${{ secrets.DB_URL }}"
                   fi
-                  export DL_BENCH_ARGS="--host ${HOST} --benchmark mlp --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} -v ${URL}"
+
+                  export DL_BENCH_ARGS="--host ${HOST} --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} -v ${URL}"
                   source iter.sh
 
             - name: Upload results.db to artifacts when running in AWS
@@ -93,7 +95,7 @@ jobs:
               if: contains(fromJSON(inputs.runner_labels), 'aws') && inputs.shutdown_cloud_runner
               shell: bash -el {0}
               run: sudo shutdown -h +2
-    
+
     parse_results:
         runs-on: [self-hosted, glados]
         if: contains(fromJSON(inputs.runner_labels), 'aws')
@@ -103,8 +105,8 @@ jobs:
               uses: actions/download-artifact@v3
               with:
                   name: results.db
-                  path: results.db 
-            
+                  path: results.db
+
             - name: Upload results into DB
               shell: bash -el {0}
               run: ls -l results.db

@@ -22,6 +22,7 @@ runs:
               repository: ${{ inputs.torch_mlir_repo }}
               path: torch-mlir
               ref: ${{ inputs.torch_mlir_branch }}
+              fetch-depth: 0
               submodules: recursive
         - name: Build torch-mlir
           shell: bash -el {0}

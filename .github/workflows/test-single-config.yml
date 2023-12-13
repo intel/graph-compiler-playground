@@ -34,14 +34,6 @@ on:
                     - torchscript_onednn
                     - ipex
                     - torch_mlir
-            dtype:
-                description: Dtype to use
-                required: true
-                default: float32
-                type: choice
-                options:
-                    - float32
-                    - bfloat16
             tag:
                 description: tag to label this run in DB
                 required: true
@@ -60,7 +52,7 @@ on:
                 required: false
                 default: '["self-hosted", "spr", "glados"]'
                 type: string
-    
+
 jobs:
     print_inputs:
         runs-on: Linux
@@ -74,7 +66,6 @@ jobs:
             compiler: ${{ inputs.compiler }}
             device: ${{ inputs.device }}
             tag: ${{ inputs.tag }}
-#            dtype: ${{ inputs.dtype }}
             torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
             torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
             runner_labels: ${{ inputs.runner_labels }}

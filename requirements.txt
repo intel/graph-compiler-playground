@@ -1,5 +1,5 @@
 # torch
 # torchvision
 sqlalchemy
-thop
+ptflops
 mysql-connector-python
