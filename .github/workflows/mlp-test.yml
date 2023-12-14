@@ -98,7 +98,7 @@ jobs:
               run: sudo shutdown -h +2
 
     parse_results:
-        runs-on: [self-hosted, glados]
+        runs-on: [self-hosted, glados, spr]
         if: contains(fromJSON(inputs.runner_labels), 'aws')
         needs: mlp_test
         steps:
@@ -115,6 +115,8 @@ jobs:
                 ls -l
                 sudo apt update && sudo apt install sqlite3
                 ./db_tools/export_sqlite2csv.sh
+
+                source ${CONDA}/bin/activate ${{ inputs.conda_env }}
                 python ./db_tools/export_csv2url.py
                 # --url ${{ secrets.DB_URL }}
 
