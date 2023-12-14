@@ -1,3 +1,5 @@
+#!/bin/bash
+
 export ONEDNN_VERBOSE=0
 
 # TO be removed
