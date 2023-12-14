@@ -30,7 +30,7 @@ on:
                 default: cpu-proto
                 type: string
             runner_labels:
-                description: Labels to filter runners
+                description: Labels to filter runners, for `aws` always provide `aws` + `nvidia` or `amd64c` or `amd32c`.
                 required: false
                 default: '["self-hosted", "spr", "glados"]'
                 type: string
@@ -70,9 +70,10 @@ jobs:
                   LABELS='${{ inputs.runner_labels }}'
                   case "${LABELS}" in
                       *spr*) HOST="spr";;
+                      *amd32c*) HOST="amd32c";;
+                      *amd64c*) HOST="amd64c";;
                       *amd*) HOST="amd";;
-                      *nvidia*) HOST="cuda";;
-                      *cuda*) HOST="cuda";;
+                      *nvidia*) HOST="nvidia";;
                       *glados*) HOST="unknown_glados";;
                       *aws*) HOST="unknown_aws";;
                       *) HOST="unknown";;
@@ -101,12 +102,18 @@ jobs:
         if: contains(fromJSON(inputs.runner_labels), 'aws')
         needs: mlp_test
         steps:
+            - uses: actions/checkout@v4
             - name: Download results.db from artifacts
               uses: actions/download-artifact@v3
               with:
                   name: results.db
-                  path: results.db
+                  path: .
 
             - name: Upload results into DB
               shell: bash -el {0}
-              run: ls -l results.db
+              run: |
+                ls -l
+                ./db_tools/export_sqlite2csv.sh
+                python ./db_tools/export_csv2url.py
+                # --url ${{ secrets.DB_URL }}
+

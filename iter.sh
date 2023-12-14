@@ -1,5 +1,11 @@
 export ONEDNN_VERBOSE=0
 
+# TO be removed
+benchmark-run -b cnn -p "name='vgg16',batch_size='16'" --benchmark_desc "vgg16_bs16" ${DL_BENCH_ARGS} || echo Failed
+exit 0
+
+
+
 if [[ -z "${DL_BENCH_ARGS}" ]]; then
   echo "Please, provide DATASETS_PWD environment variable"
   exit 1
