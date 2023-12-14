@@ -118,7 +118,8 @@ jobs:
                 ./db_tools/export_sqlite2csv.sh
 
                 source ${CONDA}/bin/activate
-                pip install -r requirements.txt
+                pip install sqlalchemy pandas mysql-connector-python
+                pip install --no-deps -e .
                 python ./db_tools/export_csv2url.py
                 # --url ${{ secrets.DB_URL }}
 
