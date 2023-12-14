@@ -16,8 +16,18 @@ on:
                 description: Torch-MLIR branch to checkout
                 required: true
                 default: cpu-proto
-
+            runner_labels:
+                description: Labels to filter runners
+                required: false
+                default: '["self-hosted", "spr", "glados"]'
+                type: string
+    
 jobs:
+    print_inputs:
+        runs-on: Linux
+        steps:
+            - name: Print Inputs
+              run: echo "${{ toJSON(github.event.inputs) }}"
     mlp_test:
         strategy:
             matrix:
@@ -39,5 +49,6 @@ jobs:
             tag: ${{ inputs.tag }}
             torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
             torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
+            runner_labels: ${{ inputs.runner_labels }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}

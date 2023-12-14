@@ -29,15 +29,29 @@ on:
                 required: true
                 default: cpu-proto
                 type: string
+            runner_labels:
+                description: Labels to filter runners, for `aws` always provide `aws` + `nvidia` or `amd64c` or `amd32c`.
+                required: false
+                default: '["self-hosted", "spr", "glados"]'
+                type: string
+            shutdown_cloud_runner:
+                description: Whether to shutdown AWS cloud runner
+                required: false
+                default: true
+                type: boolean
         secrets:
             DB_URL:
                 required: true
 
 jobs:
+    print_inputs:
+        runs-on: Linux
+        steps:
+            - name: Print Inputs
+              run: echo "${{ toJSON(github.event.inputs) }}"
+
     mlp_test:
-        runs-on:
-            - self-hosted
-            - glados
+        runs-on: ${{ fromJSON(inputs.runner_labels) }}
         steps:
             - uses: actions/checkout@v4
             - uses: ./.github/actions/initial_setup
@@ -53,5 +67,58 @@ jobs:
                   source ${CONDA}/bin/activate ${{ inputs.conda_env }}
 
                   export ONEDNN_VERBOSE=0
-                  export DL_BENCH_ARGS="--host spr --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} -v --url ${{ secrets.DB_URL }}"
+                  LABELS='${{ inputs.runner_labels }}'
+                  case "${LABELS}" in
+                      *spr*) HOST="spr";;
+                      *amd32c*) HOST="amd32c";;
+                      *amd64c*) HOST="amd64c";;
+                      *amd*) HOST="amd";;
+                      *nvidia*) HOST="nvidia";;
+                      *glados*) HOST="unknown_glados";;
+                      *aws*) HOST="unknown_aws";;
+                      *) HOST="unknown";;
+                  esac
+                  if [[ ${LABELS} = *glados* ]]; then
+                      URL="--url ${{ secrets.DB_URL }}"
+                  fi
+
+                  export DL_BENCH_ARGS="--host ${HOST} --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} -v ${URL}"
                   source iter.sh
+
+            - name: Upload results.db to artifacts when running in AWS
+              if: contains(fromJSON(inputs.runner_labels), 'aws')
+              uses: actions/upload-artifact@v3
+              with:
+                  name: results.db
+                  path: results.db
+
+            - name: Shutdown AWS cloud runner
+              if: contains(fromJSON(inputs.runner_labels), 'aws') && inputs.shutdown_cloud_runner
+              shell: bash -el {0}
+              run: sudo shutdown -h +2
+
+    parse_results:
+        runs-on: [self-hosted, glados, spr]
+        if: contains(fromJSON(inputs.runner_labels), 'aws')
+        needs: mlp_test
+        steps:
+            - uses: actions/checkout@v4
+            - name: Download results.db from artifacts
+              uses: actions/download-artifact@v3
+              with:
+                  name: results.db
+                  path: .
+
+            - name: Upload results into DB
+              shell: bash -el {0}
+              run: |
+                ls -l
+
+                sudo apt update && sudo apt install sqlite3
+                ./db_tools/export_sqlite2csv.sh
+
+                source ${CONDA}/bin/activate
+                pip install sqlalchemy pandas mysql-connector-python
+                pip install --no-deps -e .
+                python ./db_tools/export_csv2url.py results.csv --url ${{ secrets.DB_URL }}
+
