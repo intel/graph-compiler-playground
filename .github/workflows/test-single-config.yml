@@ -54,6 +54,7 @@ on:
                 type: string
             shutdown_cloud_runner:
                 default: true
+                type: boolean
 
 jobs:
     print_inputs:
