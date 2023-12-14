@@ -52,6 +52,8 @@ on:
                 required: false
                 default: '["self-hosted", "spr", "glados"]'
                 type: string
+            shutdown_cloud_runner:
+                default: true
 
 jobs:
     print_inputs:
@@ -69,5 +71,6 @@ jobs:
             torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
             torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
             runner_labels: ${{ inputs.runner_labels }}
+            shutdown_cloud_runner: ${{ inputs.shutdown_cloud_runner }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}
