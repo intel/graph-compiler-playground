@@ -120,6 +120,5 @@ jobs:
                 source ${CONDA}/bin/activate
                 pip install sqlalchemy pandas mysql-connector-python
                 pip install --no-deps -e .
-                python ./db_tools/export_csv2url.py results.csv
-                # --url ${{ secrets.DB_URL }}
+                python ./db_tools/export_csv2url.py results.csv --url ${{ secrets.DB_URL }}
 
