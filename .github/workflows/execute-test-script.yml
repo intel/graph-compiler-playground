@@ -29,12 +29,7 @@ on:
                 description: Type of runner to use
                 required: true
                 default: spr
-                type: choice
-                options:
-                    - spr
-                    - amd32c
-                    - amd64c
-                    - nvidia
+                type: string
             shutdown_cloud_runner:
                 description: Whether to shutdown AWS cloud runner
                 required: false
@@ -65,7 +60,6 @@ jobs:
               id: get_runner_labels
               shell: bash -el {0}
               run: |
-                LABELS=""
                 case "${{ inputs.runner_type }}" in
                     spr)
                         echo 'runner_labels=["self-hosted", "spr", "glados"]' >> $GITHUB_OUTPUT;;
@@ -91,7 +85,7 @@ jobs:
                     torch_mlir)
                         echo conda_env=mlir >> $GITHUB_OUTPUT;;
                     ipex)
-                        echo conda_env=ipex  >> $GITHUB_OUTPUT;;
+                        echo conda_env=ipex >> $GITHUB_OUTPUT;;
                     *)
                         if [[ ${{ inputs.device }} = "cuda" ]]; then
                             echo conda_env=cuda >> $GITHUB_OUTPUT
