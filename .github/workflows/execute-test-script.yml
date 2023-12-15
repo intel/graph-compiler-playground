@@ -39,6 +39,11 @@ on:
                 required: false
                 default: true
                 type: boolean
+            test_script:
+                description: Test script to run
+                required: false
+                default: "./mlp.sh"
+                type: string
         secrets:
             DB_URL:
                 required: true
@@ -83,8 +88,8 @@ jobs:
                   fi
 
                   export DL_BENCH_ARGS="--host ${HOST} --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} -v ${URL}"
-                  export KMP_AFFINITY=respect,noreset,verbose,granularity=fine,balanced
-                  numactl -N 1 ./iter.sh
+                  export KMP_AFFINITY=respect,noreset,granularity=fine,balanced
+                  numactl -N 1 ${{ inputs.test_script }}
 
             - name: Upload results.db to artifacts when running in AWS
               if: contains(fromJSON(inputs.runner_labels), 'aws')
