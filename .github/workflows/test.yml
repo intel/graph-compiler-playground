@@ -16,11 +16,16 @@ on:
                 description: Torch-MLIR branch to checkout
                 required: true
                 default: cpu-proto
-            runner_labels:
-                description: Labels to filter runners
-                required: false
-                default: '["self-hosted", "spr", "glados"]'
-                type: string
+            runner_type:
+                description: Type of runner to use
+                required: true
+                default: spr
+                type: choice
+                options:
+                    - spr
+                    - amd32c
+                    - amd64c
+                    - nvidia
             shutdown_cloud_runner:
                 default: true
                 type: boolean
@@ -29,13 +34,14 @@ on:
                 required: false
                 default: '["./mlp.sh", "./cnn.sh"]'
                 type: string
-    
+
 jobs:
     print_inputs:
         runs-on: Linux
         steps:
             - name: Print Inputs
               run: echo "${{ toJSON(github.event.inputs) }}"
+
     mlp_test:
         strategy:
             matrix:
@@ -57,7 +63,7 @@ jobs:
             tag: ${{ inputs.tag }}
             torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
             torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
-            runner_labels: ${{ inputs.runner_labels }}
+            runner_type: ${{ inputs.runner_type }}
             shutdown_cloud_runner: ${{ inputs.shutdown_cloud_runner }}
             test_script: ${{ matrix.test_script }}
         secrets:
