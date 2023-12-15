@@ -21,6 +21,14 @@ on:
                 required: false
                 default: '["self-hosted", "spr", "glados"]'
                 type: string
+            shutdown_cloud_runner:
+                default: true
+                type: boolean
+            test_scripts:
+                description: Test scripts to execute
+                required: false
+                default: '["./mlp.sh", "./cnn.sh"]'
+                type: string
     
 jobs:
     print_inputs:
@@ -40,8 +48,9 @@ jobs:
 #                  {env: 'ipex', device: 'xpu', compiler: 'ipex'},
                   {env: 'mlir', device: 'cpu', compiler: 'torch_mlir'}
                 ]
+                test_script: ${{ fromJson(inputs.test_scripts) }}
             fail-fast: false
-        uses: ./.github/workflows/mlp-test.yml
+        uses: ./.github/workflows/execute-test-script.yml
         with:
             conda_env: ${{ matrix.type.env }}
             compiler: ${{ matrix.type.compiler }}
@@ -50,5 +59,7 @@ jobs:
             torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
             torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
             runner_labels: ${{ inputs.runner_labels }}
+            shutdown_cloud_runner: ${{ inputs.shutdown_cloud_runner }}
+            test_script: ${{ matrix.test_script }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}
