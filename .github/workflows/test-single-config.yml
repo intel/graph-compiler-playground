@@ -3,16 +3,6 @@ name: Run MLP test in one configuration
 on:
     workflow_dispatch:
         inputs:
-            env:
-                description: Conda env to use to run the test
-                required: true
-                default: mlir
-                type: choice
-                options:
-                    - mlir
-                    - cpu
-                    - ipex
-                    - cuda
             device:
                 description: Device to use to execute the test
                 required: true
@@ -74,7 +64,6 @@ jobs:
             fail-fast: false
         uses: ./.github/workflows/execute-test-script.yml
         with:
-            conda_env: ${{ inputs.env }}
             compiler: ${{ inputs.compiler }}
             device: ${{ inputs.device }}
             tag: ${{ inputs.tag }}

@@ -36,7 +36,7 @@ runs:
               # Increase this value to reset cache if etc/example-environment.yml has not changed
               CACHE_NUMBER: 2
           with:
-              path: ${{ env.CONDA }}/envs
+              path: ${{ env.HOME }}/.conda/envs
               key: >-
                   conda-${{ inputs.conda_env }}-
                   ${{ hashFiles(format('tests/conda-envs/{0}.yaml', inputs.conda_env)) }}-
