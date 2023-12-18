@@ -5,6 +5,7 @@ if (( $# != 1 )); then
 fi
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-./create-env.sh ${SCRIPT_DIR}/../conda-envs/mlir.yaml
+${SCRIPT_DIR}/create-env.sh $1/conda-dev-env.yml
 source ${CONDA}/bin/activate mlir
 pip install -r $1/requirements.txt
+pip install -r $1/torchvision-requirements.txt

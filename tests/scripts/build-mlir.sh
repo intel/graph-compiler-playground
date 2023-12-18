@@ -6,15 +6,12 @@ if (( $# != 1 )); then
     >&2 echo "Need path to torch-mlir repository as an argument."
 fi
 
+if conda env list | grep mlir > /dev/null; then
+    echo "mlir conda environment already exists from cache, not creating a new one."
+else
+    SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+    ${SCRIPT_DIR}/create-mlir-env.sh $1
+fi
 
 cd $1
-
-${CONDA}/bin/conda env create -n mlir -f conda-dev-env.yml
-${CONDA}/bin/conda install -n mlir -y pip
-source ${CONDA}/bin/activate mlir
-
-pip install -r requirements.txt
-# Need torchvision for CNN benchmarks
-pip install -r torchvision-requirements.txt
-
 bash ./utils/build-with-imex.sh
