@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ex
+
 if (( $# != 1 )); then
     >&2 echo "Need path to torch-mlir repository as an argument."
 fi
