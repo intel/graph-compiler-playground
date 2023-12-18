@@ -25,7 +25,7 @@ runs:
               fetch-depth: 0
               submodules: recursive
 
-        - name: Restore Conda env cache for mlir env
+        - name: Restore Conda env cache for mlir-dev env
           id: conda-cache
           uses: actions/cache@v3
           env:

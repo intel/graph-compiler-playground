@@ -83,7 +83,7 @@ jobs:
               run: |
                 case "${{ inputs.compiler }}" in
                     torch_mlir)
-                        echo conda_env=mlir >> $GITHUB_OUTPUT;;
+                        echo conda_env=mlir-dev >> $GITHUB_OUTPUT;;
                     ipex)
                         echo conda_env=ipex >> $GITHUB_OUTPUT;;
                     *)
