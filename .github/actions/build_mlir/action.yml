@@ -24,6 +24,26 @@ runs:
               ref: ${{ inputs.torch_mlir_branch }}
               fetch-depth: 0
               submodules: recursive
+
+        - name: Restore Conda env cache for mlir env
+          id: conda-cache
+          uses: actions/cache@v3
+          env:
+              # Increase this value to reset cache if etc/example-environment.yml has not changed
+              CACHE_NUMBER: 3
+          with:
+              path: /home/runner/.conda/envs
+              key: >-
+                  conda-${{ inputs.conda_env }}-
+                  ${{ hashFiles('torch-mlir/conda-dev-env.yml.yaml',
+                      'torch-mlir/requirements.txt',
+                      'torch-mlir/pytorch-requirements.txt',
+                      'torch-mlir/build-requirements.txt',
+                      'torch-mlir/test-requirements.txt',
+                      'torch-mlir/torchvision-requirements.txt') }}-
+                  ${{ steps.get-date.outputs.today }}-
+                  ${{ env.CACHE_NUMBER }}
+
         - name: Build torch-mlir
           shell: bash -el {0}
           run: |

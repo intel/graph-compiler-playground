@@ -29,12 +29,13 @@ runs:
           run: echo "today=$(/bin/date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
           shell: bash
 
-        - name: Restore Conda env cache
+        - name: Restore Conda env cache for non-mlir envs
+          if: ${{ inputs.conda_env != 'mlir' }}
           id: conda-cache
           uses: actions/cache@v3
           env:
               # Increase this value to reset cache if etc/example-environment.yml has not changed
-              CACHE_NUMBER: 2
+              CACHE_NUMBER: 3
           with:
               path: /home/runner/.conda/envs
               key: >-
