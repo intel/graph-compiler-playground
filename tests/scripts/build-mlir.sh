@@ -13,5 +13,7 @@ else
     ${SCRIPT_DIR}/create-mlir-env.sh $1
 fi
 
+source ${CONDA}/bin/activate mlir
+
 cd $1
 bash ./utils/build-with-imex.sh
