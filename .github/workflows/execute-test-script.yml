@@ -119,6 +119,7 @@ jobs:
                   export KMP_SETTINGS=1
                   export KMP_BLOCKTIME=1
                   export OMP_NUM_THREADS=32
+                  export ATEN_CPU_CAPABILITY=avx512
                   numactl -N 1 ${{ inputs.test_script }}
 
             - name: Upload results.db to artifacts when running in AWS
