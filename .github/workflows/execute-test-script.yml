@@ -118,6 +118,7 @@ jobs:
                   export KMP_AFFINITY="granularity=fine,verbose,compact,1,0"
                   export KMP_SETTINGS=1
                   export KMP_BLOCKTIME=1
+                  export OMP_NUM_THREADS=32
                   numactl -N 1 ${{ inputs.test_script }}
 
             - name: Upload results.db to artifacts when running in AWS
