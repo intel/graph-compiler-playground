@@ -138,6 +138,7 @@ class CnnBenchmark(Benchmark):
         total = 0
         n_items = 0
 
+        total_time = 0
         net.eval()
         with torch.no_grad():
             start = time.perf_counter()
@@ -145,7 +146,9 @@ class CnnBenchmark(Benchmark):
                 for x in testloader:
                     x = backend.to_device(x)
                     if backend.dtype == torch.float32:
+                        s = time.perf_counter()
                         output = net(x)
+                        total_time += time.perf_counter() - s
                         assert output.dtype is backend.dtype, f"{output.dtype}!={backend.dtype}"
                         _, predicted = torch.max(output.data, 1)
 
@@ -164,7 +167,7 @@ class CnnBenchmark(Benchmark):
         print(f"{n_items} were processed in {tm.name2time['duration_s']}s")
 
         results = tm.get_results()
-        results["samples_per_s"] = n_items / results["duration_s"]
+        results["samples_per_s"] = n_items / total_time
         results["flops_per_sample"] = flops_per_sample
 
         return results
