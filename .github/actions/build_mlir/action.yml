@@ -39,7 +39,7 @@ runs:
           with:
               path: /home/runner/.conda/envs
               key: >-
-                  conda-${{ inputs.conda_env }}-
+                  conda-mlir-dev-
                   ${{ hashFiles('torch-mlir/conda-dev-env.yml.yaml',
                       'torch-mlir/requirements.txt',
                       'torch-mlir/pytorch-requirements.txt',
