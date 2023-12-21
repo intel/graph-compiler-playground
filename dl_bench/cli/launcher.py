@@ -97,10 +97,10 @@ def parse_args():
         "-v", "--verbose", required=False, action="store_true", help="Verbose mode."
     )
     parser.add_argument(
-        "--skip_verification",
+        "--verification",
         required=False,
         action="store_true",
-        help="Skip golden generation and comparison.",
+        help="Perform output verification.",
     )
     return parser.parse_args()
 
@@ -136,18 +136,13 @@ def main():
     backend = Backend(device=device, compiler=compiler, dtype=dtype)
     benchmark = benchmarks_table[benchmark_name](benchmark_params)
     if args.skip_verification:
-        results, current_outs = benchmark.inference(backend)
+        results, _ = benchmark.inference(backend)
     else:
-        import torch
-
-        reference_backend = Backend(
-            device="cuda" if torch.cuda.is_available() else "cpu",
-            compiler="torch",
-            dtype=dtype,
-        )
-        _, golden_results = benchmark.inference(reference_backend)
-        results, current_outs = benchmark.inference(backend)
-        cmp_res = compare(current_outs, golden_results)
+        ref_device = "cpu" if device not in "cuda" else device
+        reference_backend = Backend(device=ref_device, compiler="torch", dtype=dtype)
+        _, ref_outputs = benchmark.inference(reference_backend)
+        results, outputs = benchmark.inference(backend)
+        cmp_res = compare(outputs, ref_outputs)
 
     print(f"Benchmark {benchmark_name} completed")
 
