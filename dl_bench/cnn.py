@@ -106,7 +106,12 @@ class CnnBenchmark(Benchmark):
     def run(self, backend: Backend, params):
         tm = TimerManager()
         
-        print("Torch cpu capability:", torch.backends.cpu.get_cpu_capability())
+        try:
+            print("Torch cpu capability:", torch.backends.cpu.get_cpu_capability())
+            1 / 0
+        except:
+            pass
+
 
         # PARAMS
         name = params.get("name", "resnet50")
