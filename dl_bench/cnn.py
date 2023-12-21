@@ -108,7 +108,6 @@ class CnnBenchmark(Benchmark):
         
         try:
             print("Torch cpu capability:", torch.backends.cpu.get_cpu_capability())
-            1 / 0
         except:
             pass
 
