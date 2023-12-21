@@ -168,7 +168,13 @@ class ValueReport:
             f"expected a value of type `{expected}` but got `{actual.__class__.__name__}`"
         )
 
+
 def compare(taken, golden):
+    if len(taken) != len(golden):
+        raise ValueError(
+            f"Golden comparison mismatch: tensor lengths are different, {len(golden)} != {len(taken)}"
+        )
+
     res = ValueReport(taken, golden, ErrorContext([]))
     if res.failed:
         print(res.error_str())
