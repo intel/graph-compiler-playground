@@ -105,6 +105,12 @@ IN_SHAPE = (3, 224, 224)
 class CnnBenchmark(Benchmark):
     def run(self, backend: Backend, params):
         tm = TimerManager()
+        
+        try:
+            print("Torch cpu capability:", torch.backends.cpu.get_cpu_capability())
+        except:
+            pass
+
 
         # PARAMS
         name = params.get("name", "resnet50")
@@ -138,33 +144,40 @@ class CnnBenchmark(Benchmark):
         total = 0
         n_items = 0
 
+        diffs = []
         net.eval()
         with torch.no_grad():
             start = time.perf_counter()
+            # Duration is inconsistent now
             with tm.timeit("duration_s"):
                 for x in testloader:
+                    s = time.perf_counter()
                     x = backend.to_device(x)
                     if backend.dtype == torch.float32:
                         output = net(x)
+                        diff = time.perf_counter() - s
                         assert output.dtype is backend.dtype, f"{output.dtype}!={backend.dtype}"
                         _, predicted = torch.max(output.data, 1)
 
                     else:
                         with torch.autocast(device_type=backend.device_name, dtype=backend.dtype):
                             output = net(x)
+                            diff = time.perf_counter() - s
                             assert output.dtype is backend.dtype, f"{output.dtype}!={backend.dtype}"
                             _, predicted = torch.max(output.data, 1)
 
+                    diffs.append(diff)
                     n_items += len(x)
 
                     # early stopping
                     if (time.perf_counter() - start) > min_seconds and n_items > batch_size * min_batches:
                         break
 
-        print(f"{n_items} were processed in {tm.name2time['duration_s']}s")
+        print(f"Latency 0%-5%-50%-95%-100% are: {np.percentile(diffs, [0, 5, 50, 95, 100])}")
 
         results = tm.get_results()
-        results["samples_per_s"] = n_items / results["duration_s"]
+        results["samples_per_s"] = n_items / sum(diffs)
+        print(f"Items per second: {results['samples_per_s']:.3}")
         results["flops_per_sample"] = flops_per_sample
 
         return results
