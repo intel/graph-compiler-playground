@@ -1,16 +1,45 @@
 import abc
+import copy
+import time
 from time import perf_counter
+from typing import Any
 
+import numpy as np
 import torch
 from torch.nn import Module
-
-
-from typing import Any, Callable
-import copy
-import numpy as np
-
 from torch.utils.data import DataLoader, Dataset
-import time
+
+
+def get_time():
+    return time.perf_counter()
+
+
+class RandomInfDataset(Dataset):
+    def __init__(self, n, in_shape, seed=42):
+        super().__init__()
+        np.random.seed(seed)
+
+        self.values = np.random.randn(n, *in_shape).astype(np.float32)
+
+    def __len__(self):
+        return len(self.values)
+
+    def __getitem__(self, index):
+        return self.values[index]
+
+
+def get_inf_loaders(n, in_shape, batch_size, device: str):
+    # This speeds up data copy for cuda devices
+    pin_memory = device == "cuda"
+
+    ds = RandomInfDataset(n, in_shape)
+    train_loader = DataLoader(
+        ds, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=pin_memory
+    )
+    test_loader = DataLoader(
+        ds, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=pin_memory
+    )
+    return train_loader, test_loader
 
 
 def recursively_convert_to_numpy(o: Any):
@@ -223,30 +252,21 @@ class Backend:
             raise ValueError(f"Unknown execution device {device_name}.")
 
 
-class ConcreteBenchmark:
-    def __init__(self) -> None:
-        super().__init__()
-
-    def check_fields(self):
-        try:
-            self.net is not None
-            self.in_shape is not None
-            self.dataset is not None
-            self.batch_size is not None
-            # TODO check, that net takes elem from testloader
-        except AttributeError as attr_err:
-            raise RuntimeError(
-                "Required fields are not initilized in nested class. \nOriginal attr err: "
-                + str(attr_err)
-            )
+class Benchmark:
+    def __init__(
+        self, net, in_shape, dataset, batch_size, min_batches=10, min_seconds=10
+    ) -> None:
+        self.net = net
+        self.in_shape = in_shape
+        self.dataset = dataset
+        self.batch_size = batch_size
+        self.min_batches = min_batches
+        self.min_seconds = min_seconds
 
     def compile(self, sample, backend: Backend):
         self.net = backend.prepare_eval_model(self.net, sample_input=sample)
-        return
 
     def inference(self, backend: Backend):
-        self.check_fields()
-
         test_loader = torch.utils.data.DataLoader(
             self.dataset,
             batch_size=self.batch_size,
@@ -275,24 +295,23 @@ class ConcreteBenchmark:
         n_items = 0
 
         self.net.eval()
-        current_outs = [None] * len(test_loader)
+        outputs = []
         with torch.no_grad():
             start = time.perf_counter()
             with tm.timeit("duration_s"):
                 for i, x in enumerate(test_loader):
                     x = backend.to_device(x)
                     if backend.dtype != torch.float32:
-                        print("dtype: ", backend.dtype)
                         with torch.autocast(
                             device_type=backend.device_name,
                             dtype=backend.dtype,
                         ):
-                            outputs = self.net(x)
+                            y = self.net(x)
                     else:
-                        outputs = self.net(x)
+                        y = self.net(x)
 
                     n_items += len(x)
-                    current_outs[i] = outputs
+                    outputs.append(y)
 
                     # early stopping
                     if (
@@ -307,50 +326,41 @@ class ConcreteBenchmark:
         results["samples_per_s"] = n_items / results["duration_s"]
         results["flops_per_sample"] = self.flops_per_sample
 
-        return results, current_outs
+        return results, outputs
 
+    def train(self):
+        # We are not interested in training yet.
+        # criterion = nn.CrossEntropyLoss()
+        # optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
-def get_cifar_loaders(train_batch_size, inf_batch_size):
-    import torchvision
-    import torchvision.transforms as transforms
+        # N_EPOCHS = 3
+        # epoch_stats = {}
+        # n_report = 10
+        # for epoch in range(n_epochs):  # loop over the dataset multiple times
+        #     running_loss = 0.0
 
-    n_chans_in = 3072
-    n_chans_out = 10
+        #     n_items = 0
+        #     start = get_time()
+        #     for i, (x, y) in enumerate(trainloader):
+        #         optimizer.zero_grad()
 
-    transform = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            transforms.Normalize((0.0, 0.0, 0.0), (1, 1, 1)),
-        ]
-    )
+        #         outputs = net(x)
+        #         loss = criterion(outputs, y)
+        #         loss.backward()
+        #         optimizer.step()
 
-    trainset = torchvision.datasets.CIFAR10(
-        root="./data", train=True, download=True, transform=transform
-    )
-    trainloader = torch.utils.data.DataLoader(
-        trainset, batch_size=train_batch_size, shuffle=True, num_workers=2
-    )
+        #         n_items += len(x)
 
-    testset = torchvision.datasets.CIFAR10(
-        root="./data", train=False, download=True, transform=transform
-    )
-    testloader = torch.utils.data.DataLoader(
-        testset, batch_size=inf_batch_size, shuffle=False, num_workers=2
-    )
+        #         running_loss += loss.item()
+        #         if i % n_report == (n_report - 1):
+        #             print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / n_report:.3f}')
+        #             running_loss = 0.0
 
-    classes = (
-        "plane",
-        "car",
-        "bird",
-        "cat",
-        "deer",
-        "dog",
-        "frog",
-        "horse",
-        "ship",
-        "truck",
-    )
-    return trainloader, testloader
+        #     stop = get_time()
+        #     print(f"{n_items} took {stop - start}")
+
+        # print('Finished Training')
+        pass
 
 
 def get_macs(model, in_shape, backend):

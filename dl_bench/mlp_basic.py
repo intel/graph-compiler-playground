@@ -4,8 +4,8 @@ import torch
 from torch.nn import Module, Linear
 import torch.nn.functional as F
 
-from dl_bench.utils import ConcreteBenchmark
-from dl_bench.mlp import RandomClsDataset
+from dl_bench.utils import Benchmark
+from dl_bench.mlp import RandomInfDataset
 from typing import List
 
 
@@ -29,31 +29,21 @@ class MLP(Module):
         return y_pred, h_2
 
 
-class MlpBasicBenchmark(ConcreteBenchmark):
+class MlpBasicBenchmark(Benchmark):
     def __init__(self, params) -> None:
-        super().__init__()
-
-        # PARAMS
         INPUT_H = 28
         INPUT_W = 28
         OUTPUT_DIM = 10
         HIDDEN_LAYER_DIMS = (250, 100)
 
-        self.in_shape = (INPUT_H, INPUT_W)
+        in_shape = (INPUT_H, INPUT_W)
+        batch_size = 1
 
-        # PARAMS
-        self.batch_size = 1
+        dataset = RandomInfDataset(1, in_shape)
 
-        # Do early stopping once we hit min_batches & min_seconds to accelerate measurement
-        self.min_batches = 1
-        self.min_seconds = 10
-
-        self.dataset = RandomClsDataset(
-            self.batch_size * self.min_batches, self.in_shape, OUTPUT_DIM, 42
-        )
-
-        self.net = MLP(
-            INPUT_H * INPUT_W, OUTPUT_DIM, HIDDEN_LAYER_DIMS
+        net = MLP(INPUT_H * INPUT_W, OUTPUT_DIM, HIDDEN_LAYER_DIMS)
+        super().__init__(
+            net=net, in_shape=in_shape, dataset=dataset, batch_size=batch_size
         )
 
 

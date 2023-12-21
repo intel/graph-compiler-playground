@@ -1,45 +1,9 @@
-import time
 from typing import List
 
-import numpy as np
 import torch
 import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import DataLoader, Dataset
 
-from dl_bench.utils import ConcreteBenchmark
-
-
-def get_time():
-    return time.perf_counter()
-
-
-class RandomClsDataset(Dataset):
-    def __init__(self, n, in_shape, n_classes, seed=42):
-        super().__init__()
-        np.random.seed(seed)
-        self.values = np.random.randn(n, *in_shape).astype(np.float32)
-        # self.labels = np.random.randint(n_classes, size=(n,))
-
-    def __len__(self):
-        return len(self.values)
-
-    def __getitem__(self, index):
-        return self.values[index]  # , self.labels[index]
-
-
-def get_random_loaders(n, in_shape, n_classes, batch_size, device: str):
-    # This speeds up data copy for cuda devices
-    pin_memory = device == "cuda"
-
-    ds = RandomClsDataset(42, n, in_shape, n_classes)
-    train_loader = DataLoader(
-        ds, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=pin_memory
-    )
-    test_loader = DataLoader(
-        ds, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=pin_memory
-    )
-    return train_loader, test_loader
+from dl_bench.utils import Benchmark, RandomInfDataset
 
 
 size2_struct = [512, 1024, 2048, 512]
@@ -70,8 +34,6 @@ name2params = {
     "4@16384": dict(struct=[16384] * 4),
     "2@16384": dict(struct=[16384] * 2),
 }
-
-name2bs = {}
 
 
 def build_mlp(
@@ -111,60 +73,21 @@ def get_mlp(n_chans_in, n_chans_out, name):
     return net
 
 
-class MlpBenchmark(ConcreteBenchmark):
+class MlpBenchmark(Benchmark):
     def __init__(self, params) -> None:
-        super().__init__()
-
-        # PARAMS
         IN_FEAT = 128
         N_CLASSES = 10
+        in_shape = (IN_FEAT,)
 
-        self.in_shape = (IN_FEAT,)
+        batch_size = int(params.get("batch_size", 1024))
 
-        # PARAMS
+        min_batches = 10
+        DATASET_SIZE = max(10_240, batch_size * min_batches)
+        dataset = RandomInfDataset(DATASET_SIZE, in_shape)
+
         name = params.get("name", "size5")
-        self.batch_size = int(params.get("batch_size", 1024))
+        net = get_mlp(n_chans_in=IN_FEAT, n_chans_out=N_CLASSES, name=name)
 
-        # Do early stopping once we hit min_batches & min_seconds to accelerate measurement
-        self.min_batches = 10
-        self.min_seconds = 10
-
-        DATASET_SIZE = max(10_240, self.batch_size * self.min_batches)
-
-        self.dataset = RandomClsDataset(DATASET_SIZE, self.in_shape, N_CLASSES, 42)
-
-        self.net = get_mlp(n_chans_in=IN_FEAT, n_chans_out=N_CLASSES, name=name)
-
-    def train(self):
-        # We are not interested in training yet.
-        # criterion = nn.CrossEntropyLoss()
-        # optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
-
-        # N_EPOCHS = 3
-        # epoch_stats = {}
-        # n_report = 10
-        # for epoch in range(n_epochs):  # loop over the dataset multiple times
-        #     running_loss = 0.0
-
-        #     n_items = 0
-        #     start = get_time()
-        #     for i, (x, y) in enumerate(trainloader):
-        #         optimizer.zero_grad()
-
-        #         outputs = net(x)
-        #         loss = criterion(outputs, y)
-        #         loss.backward()
-        #         optimizer.step()
-
-        #         n_items += len(x)
-
-        #         running_loss += loss.item()
-        #         if i % n_report == (n_report - 1):
-        #             print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / n_report:.3f}')
-        #             running_loss = 0.0
-
-        #     stop = get_time()
-        #     print(f"{n_items} took {stop - start}")
-
-        # print('Finished Training')
-        pass
+        super().__init__(
+            net=net, in_shape=in_shape, dataset=dataset, batch_size=batch_size
+        )
