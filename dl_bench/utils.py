@@ -277,6 +277,11 @@ class Benchmark:
 
         tm = TimerManager()
 
+        try:
+            print("Torch cpu capability:", torch.backends.cpu.get_cpu_capability())
+        except:
+            pass
+
         self.flops_per_sample = get_macs(self.net, self.in_shape, backend) * 2
 
         sample = next(iter(test_loader))
@@ -296,10 +301,13 @@ class Benchmark:
 
         self.net.eval()
         outputs = []
+        fw_times = []
         with torch.no_grad():
             start = time.perf_counter()
+            # Duration is inconsistent now
             with tm.timeit("duration_s"):
                 for i, x in enumerate(test_loader):
+                    s = get_time()
                     x = backend.to_device(x)
                     if backend.dtype != torch.float32:
                         with torch.autocast(
@@ -310,6 +318,7 @@ class Benchmark:
                     else:
                         y = self.net(x)
 
+                    fw_times.append(get_time() - s)
                     n_items += len(x)
                     outputs.append(y)
 
@@ -320,10 +329,12 @@ class Benchmark:
                     ):
                         break
 
-        print(f"{n_items} were processed in {tm.name2time['duration_s']}s")
+        print(
+            f"Latency 0%-5%-50%-95%-100% are: {np.percentile(fw_times, [0, 5, 50, 95, 100])}"
+        )
 
         results = tm.get_results()
-        results["samples_per_s"] = n_items / results["duration_s"]
+        results["samples_per_s"] = n_items / sum(fw_times)
         results["flops_per_sample"] = self.flops_per_sample
 
         return results, outputs

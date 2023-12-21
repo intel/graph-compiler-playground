@@ -115,6 +115,7 @@ jobs:
 
                   export DL_BENCH_ARGS="--host ${{ inputs.runner_type }} --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} -v ${URL}"
                   export KMP_AFFINITY=respect,noreset,granularity=fine,balanced
+                  export OMP_NUM_THREADS=32
                   numactl -N 1 ${{ inputs.test_script }}
 
             - name: Upload results.db to artifacts when running in AWS
