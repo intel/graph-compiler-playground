@@ -21,7 +21,13 @@ def fix_lengths(outputs, ref_outputs):
     """To speed up benchmarking we pass different number of batches for different backends.
     Need to match the lenghts."""
     min_lengths = min(len(outputs), len(ref_outputs))
-    return outputs[:min_lengths], ref_outputs[:min_lengths]
+    if len(outputs) != len(ref_outputs):
+        print(
+            f"Slicing passed batches to smallest size {len(outputs)}->{min_lengths}; {len(ref_outputs)}->{min_lengths}"
+        )
+        return outputs[:min_lengths], ref_outputs[:min_lengths]
+    else:
+        return outputs, ref_outputs
 
 
 def parse_args():
