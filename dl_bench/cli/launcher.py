@@ -97,10 +97,10 @@ def parse_args():
         "-v", "--verbose", required=False, action="store_true", help="Verbose mode."
     )
     parser.add_argument(
-        "--verification",
+        "--skip_verification",
         required=False,
         action="store_true",
-        help="Perform output verification.",
+        help="Skip output verification.",
     )
     return parser.parse_args()
 
@@ -135,7 +135,7 @@ def main():
 
     backend = Backend(device=device, compiler=compiler, dtype=dtype)
     benchmark = benchmarks_table[benchmark_name](benchmark_params)
-    if not args.verification:
+    if args.skip_verification:
         results, _ = benchmark.inference(backend)
     else:
         ref_device = "cpu" if device not in "cuda" else device
