@@ -17,6 +17,13 @@ benchmarks_table = {
 }
 
 
+def fix_lengths(outputs, ref_outputs):
+    """To speed up benchmarking we pass different number of batches for different backends.
+    Need to match the lenghts."""
+    min_lengths = min(len(outputs), len(ref_outputs))
+    return outputs[:min_lengths], ref_outputs[:min_lengths]
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     # Benchmark
@@ -142,6 +149,7 @@ def main():
         reference_backend = Backend(device=ref_device, compiler="torch", dtype=dtype)
         _, ref_outputs = benchmark.inference(reference_backend)
         results, outputs = benchmark.inference(backend)
+        outputs, ref_outputs = fix_lengths(outputs, ref_outputs)
         cmp_res = compare(outputs, ref_outputs)
 
     print(f"Benchmark {benchmark_name} completed")
