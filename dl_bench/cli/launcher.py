@@ -135,7 +135,7 @@ def main():
 
     backend = Backend(device=device, compiler=compiler, dtype=dtype)
     benchmark = benchmarks_table[benchmark_name](benchmark_params)
-    if args.skip_verification:
+    if not args.verification:
         results, _ = benchmark.inference(backend)
     else:
         ref_device = "cpu" if device not in "cuda" else device

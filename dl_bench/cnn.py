@@ -36,7 +36,7 @@ class CnnBenchmark(Benchmark):
         in_shape = (3, 224, 224)
         min_batches = 10
         DATASET_SIZE = max(10_240, batch_size * min_batches)
-        dataset = RandomInfDataset(DATASET_SIZE, self.in_shape)
+        dataset = RandomInfDataset(DATASET_SIZE, in_shape)
 
         name = params.get("name", "resnet50")
         net = get_cnn(name=name)
