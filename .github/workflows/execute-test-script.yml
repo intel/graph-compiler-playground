@@ -115,6 +115,7 @@ jobs:
 
                   export DL_BENCH_ARGS="--host ${{ inputs.runner_type }} --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} -v ${URL} --skip_verification"
                   export KMP_AFFINITY=respect,noreset,granularity=fine,balanced
+                  # This parameter is incredibly important once we use numactl to pick one socket, performance difference was 10x for resnet50 bs=1 torch-inductor
                   export OMP_NUM_THREADS=32
                   if [[ ${LABELS} = *glados* ]]; then
                       numactl -N 1 ${{ inputs.test_script }}
