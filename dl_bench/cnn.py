@@ -20,8 +20,7 @@ def get_cnn(name):
         "resnext50": resnext50_32x4d,
         "resnext101": resnext101_32x8d,
         "densenet121": densenet121,
-        "efficientnet_v2m": efficientnet_v2_m,
-        "mobilenet_v3_large": mobilenet_v3_large,
+        "mobilenet_v3l": mobilenet_v3_large,
     }
     if name in name2model:
         return name2model[name]()
