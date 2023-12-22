@@ -52,7 +52,8 @@ jobs:
                   {device: 'cpu', compiler: 'torchscript_onednn'},
                   {device: 'cpu', compiler: 'ipex'},
 #                  {device: 'xpu', compiler: 'ipex'},
-                  {device: 'cpu', compiler: 'torch_mlir'}
+                  {device: 'cpu', compiler: 'torch_mlir'},
+                  {device: 'cpu', compiler: 'torch_mlir_xsmm'}
                 ]
                 test_script: ${{ fromJson(inputs.test_scripts) }}
             fail-fast: false

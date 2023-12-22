@@ -24,6 +24,7 @@ on:
                     - torchscript_onednn
                     - ipex
                     - torch_mlir
+                    - torch_mlir_xsmm
             tag:
                 description: tag to label this run in DB
                 required: true

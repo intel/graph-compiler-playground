@@ -229,6 +229,52 @@ class Backend:
 
             compiled_model = result()
             print("Compiled with torch_mlir")
+        elif compile_mode == "torch_mlir_xsmm":
+            from torch_mlir._dynamo_fx_importer import import_fx_graph_as_func
+            from torch_mlir_e2e_test.configs.torchdynamo import jit
+            from torch_mlir_e2e_test.framework import TestOptions
+
+            # from torch_mlir_e2e_test.linalg_on_tensors_backends.refbackend import RefBackendLinalgOnTensorsBackend
+            from torch_mlir_e2e_test.linalg_on_tensors_backends.xsmmprotobackend import (
+                XsmmProtoLinalgOnTensorsBackend,
+            )
+            import torch.utils._pytree as pytree
+
+            #            debug_timer seems to cause problems:
+            #            TypeError: TestOptions.__init__() got an unexpected keyword argument 'debug_timer'
+            #            opts = TestOptions(debug_timer=False, use_kernels=True)
+            opts = TestOptions()
+            module = jit(
+                model,
+                [sample_input],
+                "test_name",
+                opts,
+                output_type="linalg-on-tensors",
+            )
+            backend = XsmmProtoLinalgOnTensorsBackend(opts)
+            # backend = RefBackendLinalgOnTensorsBackend()
+            module = backend.compile(module)
+            backend_module = backend.load(module)
+
+            params = {
+                **dict(model.named_parameters(remove_duplicate=False)),
+                **dict(model.named_buffers(remove_duplicate=False)),
+            }
+            params_flat, params_spec = pytree.tree_flatten(params)
+            params_flat = list(params_flat)
+
+            class result:
+                def __call__(self, *args):
+                    numpy_inputs = recursively_convert_to_numpy(params_flat + [*args])
+                    return refine_result_type(
+                        getattr(backend_module, model.__class__.__name__)(*numpy_inputs)
+                    )
+
+                def eval(self):
+                    pass
+
+            compiled_model = result()
+            print("Compiled with XSMM torch_mlir")
         else:
             raise ValueError(f"Unsupported mode {compile_mode}")
 
