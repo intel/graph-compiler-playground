@@ -166,6 +166,7 @@ class Backend:
             # enable oneDNN graph fusion globally
             torch.jit.enable_onednn_fusion(True)
             compiled_model = torch.jit.trace(model, sample_input)
+            compiled_model = torch.jit.freeze(compiled_model)
             print("Compiled with torchscript onednn")
         elif compile_mode == "ipex":
             import intel_extension_for_pytorch
