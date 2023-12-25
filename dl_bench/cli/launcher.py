@@ -81,6 +81,7 @@ def parse_args():
             "torchscript",
             "torchscript_onednn",
             "ipex",
+            "ipex_onednn_graph",
             "torch_mlir",
         ],
         help="Compilation mode to use. No compilation by default.",
