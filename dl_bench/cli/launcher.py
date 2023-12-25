@@ -150,7 +150,7 @@ def main():
 
     if args.verbose:
         print("Report:")
-        print("TFLOPS: {:.3}".format(results.get("flops_per_sample", 0) * results.get('samples_per_s', 0) / (10**12)))
+        print("TFLOPS: {:.8}".format(results.get("flops_per_sample", 0) * results.get('samples_per_s', 0) / (10**12)))
         pprint.pprint(report)
 
     if args.output is not None:
