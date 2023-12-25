@@ -147,7 +147,7 @@ class Backend:
 
             compiled_model = intel_extension_for_pytorch.optimize(model)
             print("Compiled with ipex")
-        elif compile_mode == "ipex_dnnl":
+        elif compile_mode == "ipex_onednn_graph":
             import intel_extension_for_pytorch as ipex
             from intel_extension_for_pytorch.quantization import prepare, convert
             ipex._C.set_llga_fp32_bf16_enabled(True)
@@ -175,7 +175,7 @@ class Backend:
             else:
                 compiled_model = torch.jit.trace(model, sample_input)
                 compiled_model = torch.jit.freeze(compiled_model)
-            print("Compiled with ipex_dnnl")
+            print("Compiled with ipex_onednn_graph")
         elif compile_mode == "dynamo":
             compiled_model = torch.compile(
                 model, fullgraph=True, dynamic=False, mode="reduce-overhead"

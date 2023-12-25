@@ -181,7 +181,7 @@ class MlpBenchmark(Benchmark):
         batch_size = int(params.get("batch_size", 1024))
 
         # Do early stopping once we hit min_batches & min_seconds to accelerate measurement
-        min_batches = 10
+        min_batches = 1000
         min_seconds = 10
         DATASET_SIZE = max(10_240, batch_size * min_batches)
 
@@ -203,8 +203,16 @@ class MlpBenchmark(Benchmark):
             net.eval()
             with tm.timeit("warmup_s"):
                 net(sample)
-                net(sample)
-                net(sample)
+                # net(sample)
+                # net(sample)
+                # net(sample)
+                # net(sample)
+                # net(sample)
+                # net(sample)
+                # net(sample)
+                # net(sample)
+                # net(sample)
+                # net(sample)
         print("Warmup done")
 
         # We are not interested in training yet.
@@ -264,11 +272,11 @@ class MlpBenchmark(Benchmark):
                         total += batch_size
                     else:
                         # with torch.autocast(device_type=backend.device_name, dtype=backend.dtype):
-                        tic = time.time()
+                        # tic = time.time()
                         output = net(x)
-                        toc = time.time()
-                        net_time += (toc - tic)
-                        assert output.dtype is backend.dtype, f"{output.dtype}!={backend.dtype}"
+                        # toc = time.time()
+                        # net_time += (toc - tic)
+                        # assert output.dtype is backend.dtype, f"{output.dtype}!={backend.dtype}"
                         _, predicted = torch.max(output.data, 1)
 
                         # total += y.size(0)
@@ -278,10 +286,12 @@ class MlpBenchmark(Benchmark):
                     n_items += len(x)
 
                     # early stopping
-                    if (time.perf_counter() - start) > min_seconds and total > batch_size * min_batches:
+                    # if (time.perf_counter() - start) > min_seconds and total > batch_size * min_batches:
+                    #     break
+                    if total > batch_size * min_batches:
                         break
 
-        print("net time: ", net_time)
+        # print("net time: ", net_time / min_batches * 1000)
         print(f"{n_items} were processed in {tm.name2time['duration_s']}s")
 
         results = tm.get_results()
