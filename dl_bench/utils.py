@@ -186,7 +186,7 @@ class Backend:
                 compiled_model = torch.jit.trace(convert_model, sample_input)
                 compiled_model = torch.jit.freeze(compiled_model)
             elif dtype == torch.bfloat16:
-                with torch.cpu.amp.autocast(dtype), torch.no_grad():
+                with torch.cpu.amp.autocast(enabled=True, dtype=dtype), torch.no_grad():
                     compiled_model = torch.jit.trace(model, sample_input)
                     compiled_model = torch.jit.freeze(compiled_model)
             else:
