@@ -166,12 +166,33 @@ class Backend:
             # enable oneDNN graph fusion globally
             torch.jit.enable_onednn_fusion(True)
             compiled_model = torch.jit.trace(model, sample_input)
+            compiled_model = torch.jit.freeze(compiled_model)
             print("Compiled with torchscript onednn")
         elif compile_mode == "ipex":
             import intel_extension_for_pytorch
 
             compiled_model = intel_extension_for_pytorch.optimize(model)
             print("Compiled with ipex")
+        elif compile_mode == "ipex_onednn_graph":
+            import intel_extension_for_pytorch as ipex
+            from intel_extension_for_pytorch.quantization import prepare, convert
+            # need to set_llga_fp32_bf16_enabled as False, when benchmark int8 dtype
+            ipex._C.set_llga_fp32_bf16_enabled(True)
+            model.eval()
+            if dtype == torch.qint8:
+                qconfig_mapping = ipex.quantization.default_static_qconfig_mapping
+                prepared_model  = prepare(model, qconfig_mapping, example_inputs=sample_input, inplace=False)
+                convert_model = convert(prepared_model)
+                compiled_model = torch.jit.trace(convert_model, sample_input)
+                compiled_model = torch.jit.freeze(compiled_model)
+            elif dtype == torch.bfloat16:
+                with torch.cpu.amp.autocast(enabled=True, dtype=dtype), torch.no_grad():
+                    compiled_model = torch.jit.trace(model, sample_input)
+                    compiled_model = torch.jit.freeze(compiled_model)
+            else:
+                compiled_model = torch.jit.trace(model, sample_input)
+                compiled_model = torch.jit.freeze(compiled_model)
+            print("Compiled with ipex_onednn_graph")
         elif compile_mode == "dynamo":
             compiled_model = torch.compile(
                 model, fullgraph=True, dynamic=False, mode="reduce-overhead"
