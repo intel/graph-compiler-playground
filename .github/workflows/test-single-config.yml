@@ -20,10 +20,11 @@ on:
                 options:
                     - torch
                     - dynamo
+                    - torch_mlir
                     - torchscript
                     - torchscript_onednn
                     - ipex
-                    - torch_mlir
+                    - ipex_onednn_graph
             tag:
                 description: tag to label this run in DB
                 required: true
