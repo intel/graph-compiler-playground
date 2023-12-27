@@ -82,9 +82,9 @@ jobs:
               shell: bash -el {0}
               run: |
                 case "${{ inputs.compiler }}" in
-                    torch_mlir)
+                    torch_mlir*)
                         echo conda_env=mlir-dev >> $GITHUB_OUTPUT;;
-                    ipex)
+                    ipex*)
                         echo conda_env=ipex >> $GITHUB_OUTPUT;;
                     *)
                         if [[ ${{ inputs.device }} = "cuda" ]]; then
