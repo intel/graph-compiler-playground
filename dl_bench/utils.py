@@ -171,7 +171,7 @@ class Backend:
         elif compile_mode == "ipex":
             import intel_extension_for_pytorch
 
-            compiled_model = intel_extension_for_pytorch.optimize(model)
+            compiled_model = intel_extension_for_pytorch.optimize(model, sample_input=sample_input)
             print("Compiled with ipex")
         elif compile_mode == "ipex_onednn_graph":
             import intel_extension_for_pytorch as ipex
