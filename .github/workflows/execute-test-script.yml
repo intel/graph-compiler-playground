@@ -78,7 +78,7 @@ jobs:
         runs-on: ${{ fromJSON(needs.get_runner_labels.outputs.runner_labels) }}
         steps:
             - name: Guess conda env from device and compiler parameters
-              id: guess_conda_env
+              id: set_up_vars
               shell: bash -el {0}
               run: |
                 case "${{ inputs.compiler }}" in
@@ -94,10 +94,12 @@ jobs:
                         fi;;
                 esac
 
+                echo db_name="${{ inputs.device }}-${{ inputs.compiler }}-${{ inputs.test_scipt }}-results.db" >> $GITHUB_OUTPUT
+
             - uses: actions/checkout@v4
             - uses: ./.github/actions/initial_setup
               with:
-                  conda_env: ${{ steps.guess_conda_env.outputs.conda_env }}
+                  conda_env: ${{ steps.set_up_vars.outputs.conda_env }}
                   compiler: ${{ inputs.compiler }}
                   torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
                   torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
@@ -105,7 +107,7 @@ jobs:
             - name: Run MLP test on specific compiler
               shell: bash -el {0}
               run: |
-                  source ${CONDA}/bin/activate ${{ steps.guess_conda_env.outputs.conda_env }}
+                  source ${CONDA}/bin/activate ${{ steps.set_up_vars.outputs.conda_env }}
 
                   export ONEDNN_VERBOSE=0
                   LABELS='${{ needs.get_runner_labels.outputs.runner_labels }}'
@@ -135,7 +137,7 @@ jobs:
               if: contains(fromJSON(needs.get_runner_labels.outputs.runner_labels), 'aws')
               uses: actions/upload-artifact@v3
               with:
-                  name: results.db
+                  name: ${{ steps.set_up_vars.outputs.db_name }}
                   path: results.db
 
             - name: Shutdown AWS cloud runner
@@ -154,7 +156,7 @@ jobs:
             - name: Download results.db from artifacts
               uses: actions/download-artifact@v3
               with:
-                  name: results.db
+                  name: ${{ steps.set_up_vars.outputs.db_name }}
                   path: .
 
             - name: Upload results into DB
@@ -163,7 +165,7 @@ jobs:
                 ls -l
 
                 sudo apt update && sudo apt install sqlite3
-                ./db_tools/export_sqlite2csv.sh
+                ./db_tools/export_sqlite2csv.sh ${{ steps.set_up_vars.outputs.conda_env }}.db
 
                 source ${CONDA}/bin/activate
                 pip install sqlalchemy pandas mysql-connector-python
