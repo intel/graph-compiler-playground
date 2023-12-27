@@ -123,6 +123,11 @@ jobs:
                       source ${{ inputs.test_script}}
                   fi
 
+                  # We mainly want to verify our own backend
+                  if [[ ${{ inputs.compiler }} != *torch_mlir* ]]; then
+                    DL_BENCH_ARGS += " --skip_verification"
+                  fi
+
             - name: Upload results.db to artifacts when running in AWS
               if: contains(fromJSON(needs.get_runner_labels.outputs.runner_labels), 'aws')
               uses: actions/upload-artifact@v3
