@@ -117,7 +117,7 @@ jobs:
 
                   # We mainly want to verify our own backend
                   if [[ ${{ inputs.compiler }} != *torch_mlir* ]]; then
-                    DL_BENCH_ARGS += " --skip_verification"
+                    DL_BENCH_ARGS="${DL_BENCH_ARGS} --skip_verification"
                   fi
 
                   # HOST CONFIG
