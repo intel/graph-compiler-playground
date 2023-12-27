@@ -16,28 +16,56 @@ on:
                 description: Torch-MLIR branch to checkout
                 required: true
                 default: cpu-proto
+            runner_type:
+                description: Type of runner to use
+                required: true
+                default: spr
+                type: choice
+                options:
+                    - spr
+                    - amd32c
+                    - amd64c
+                    - nvidia
+            shutdown_cloud_runner:
+                default: true
+                type: boolean
+            test_scripts:
+                description: Test scripts to execute
+                required: false
+                default: '["./mlp.sh", "./cnn.sh"]'
+                type: string
 
 jobs:
+    print_inputs:
+        runs-on: Linux
+        steps:
+            - name: Print Inputs
+              run: echo "${{ toJSON(github.event.inputs) }}"
+
     mlp_test:
         strategy:
             matrix:
                 type: [
-                  {env: 'cpu', device: 'cpu', compiler: 'torch'},
-                  {env: 'cpu', device: 'cpu', compiler: 'dynamo'},
-                  {env: 'cpu', device: 'cpu', compiler: 'torchscript'},
-                  {env: 'cpu', device: 'cpu', compiler: 'torchscript_onednn'},
-                  {env: 'ipex', device: 'cpu', compiler: 'ipex'},
-#                  {env: 'ipex', device: 'xpu', compiler: 'ipex'},
-                  {env: 'mlir', device: 'cpu', compiler: 'torch_mlir'}
+                  {device: 'cpu', compiler: 'torch'},
+                  {device: 'cpu', compiler: 'dynamo'},
+                  {device: 'cpu', compiler: 'torchscript'},
+                  {device: 'cpu', compiler: 'torchscript_onednn'},
+                  {device: 'cpu', compiler: 'ipex'},
+                #   {device: 'cpu', compiler: 'ipex_onednn_graph'},
+#                  {device: 'xpu', compiler: 'ipex'},
+                  {device: 'cpu', compiler: 'torch_mlir'}
                 ]
+                test_script: ${{ fromJson(inputs.test_scripts) }}
             fail-fast: false
-        uses: ./.github/workflows/mlp-test.yml
+        uses: ./.github/workflows/execute-test-script.yml
         with:
-            conda_env: ${{ matrix.type.env }}
             compiler: ${{ matrix.type.compiler }}
             device: ${{ matrix.type.device }}
             tag: ${{ inputs.tag }}
             torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
             torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
+            runner_type: ${{ inputs.runner_type }}
+            shutdown_cloud_runner: ${{ inputs.shutdown_cloud_runner }}
+            test_script: ${{ matrix.test_script }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}

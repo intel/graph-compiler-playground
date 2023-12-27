@@ -21,6 +21,11 @@ env:
   DOCKER_REGISTRY: docker-registry.docker-registry.svc.cluster.local:5000
 
 jobs:
+  print_inputs:
+    runs-on: Linux
+    steps:
+      - name: Print Inputs
+        run: echo "${{ toJSON(github.event.inputs) }}"
   build:
     runs-on:
       - self-hosted

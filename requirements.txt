@@ -1,5 +1,7 @@
 # torch
 # torchvision
 sqlalchemy
-thop
+ptflops
+# For DB operations
 mysql-connector-python
+pandas

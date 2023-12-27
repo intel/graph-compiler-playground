@@ -1,25 +1,19 @@
 #!/bin/bash
 
+set -ex
+
 if (( $# != 1 )); then
     >&2 echo "Need path to torch-mlir repository as an argument."
 fi
 
-source ${CONDA}/bin/activate mlir
+if ${CONDA}/bin/conda env list | grep mlir-dev > /dev/null; then
+    echo "mlir conda environment already exists from cache, not creating a new one."
+else
+    SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+    ${SCRIPT_DIR}/create-mlir-env.sh $1
+fi
 
-env
-${CONDA}/bin/conda list
+source ${CONDA}/bin/activate mlir-dev
 
 cd $1
-pip install -r requirements.txt
-
-cmake -GNinja -Bbuild \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DPython3_FIND_VIRTUALENV=ONLY \
-  -DLLVM_ENABLE_PROJECTS=mlir \
-  -DLLVM_EXTERNAL_PROJECTS="torch-mlir" \
-  -DLLVM_EXTERNAL_TORCH_MLIR_SOURCE_DIR="$PWD" \
-  -DMLIR_ENABLE_BINDINGS_PYTHON=ON \
-  -DLLVM_TARGETS_TO_BUILD=host \
-  externals/llvm-project/llvm
-
-cmake --build build
+bash ./utils/build-with-imex.sh

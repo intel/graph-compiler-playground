@@ -1,12 +1,45 @@
 import abc
+import copy
+import time
 from time import perf_counter
+from typing import Any
 
+import numpy as np
 import torch
 from torch.nn import Module
+from torch.utils.data import DataLoader, Dataset
 
 
-from typing import Any
-import numpy as np
+def get_time():
+    return time.perf_counter()
+
+
+class RandomInfDataset(Dataset):
+    def __init__(self, n, in_shape, seed=42):
+        super().__init__()
+        np.random.seed(seed)
+
+        self.values = np.random.randn(n, *in_shape).astype(np.float32)
+
+    def __len__(self):
+        return len(self.values)
+
+    def __getitem__(self, index):
+        return self.values[index]
+
+
+def get_inf_loaders(n, in_shape, batch_size, device: str):
+    # This speeds up data copy for cuda devices
+    pin_memory = device == "cuda"
+
+    ds = RandomInfDataset(n, in_shape)
+    train_loader = DataLoader(
+        ds, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=pin_memory
+    )
+    test_loader = DataLoader(
+        ds, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=pin_memory
+    )
+    return train_loader, test_loader
 
 
 def recursively_convert_to_numpy(o: Any):
@@ -83,15 +116,10 @@ class TimerManager:
         return self.name2time
 
 
-class Benchmark(abc.ABC):
-    @abc.abstractmethod
-    def run(self, backend, params):
-        pass
-
-def get_dtype(dtype):
-    if dtype == 'float32':
+def str_to_dtype(dtype: str):
+    if dtype == "float32":
         return torch.float32
-    elif dtype == 'bfloat16':
+    elif dtype == "bfloat16":
         return torch.bfloat16
     else:
         raise ValueError(f"Unsupported data type: {dtype}")
@@ -102,7 +130,7 @@ class Backend:
         self.device_name = device
         self.device = self._get_device(device_name=device)
         self.compile_mode = compiler
-        self.dtype = get_dtype(dtype)
+        self.dtype = str_to_dtype(dtype)
 
     def to_device(self, x: torch.Tensor):
         if self.device_name in ("cuda", 'xpu'):
@@ -136,13 +164,34 @@ class Backend:
             # enable oneDNN graph fusion globally
             torch.jit.enable_onednn_fusion(True)
             compiled_model = torch.jit.trace(model, sample_input)
+            compiled_model = torch.jit.freeze(compiled_model)
             print("Compiled with torchscript onednn")
         elif compile_mode == "ipex":
             import intel_extension_for_pytorch as ipex
 
             params = {} if dtype != torch.bfloat16 else {'dtype': torch.bfloat16}
-            compiled_model = ipex.optimize(model, **params)
+            compiled_model = ipex.optimize(model, sample_input=sample_input, **params)
             print("Compiled with ipex")
+        elif compile_mode == "ipex_onednn_graph":
+            import intel_extension_for_pytorch as ipex
+            from intel_extension_for_pytorch.quantization import prepare, convert
+            # need to set_llga_fp32_bf16_enabled as False, when benchmark int8 dtype
+            ipex._C.set_llga_fp32_bf16_enabled(True)
+            model.eval()
+            if dtype == torch.qint8:
+                qconfig_mapping = ipex.quantization.default_static_qconfig_mapping
+                prepared_model  = prepare(model, qconfig_mapping, example_inputs=sample_input, inplace=False)
+                convert_model = convert(prepared_model)
+                compiled_model = torch.jit.trace(convert_model, sample_input)
+                compiled_model = torch.jit.freeze(compiled_model)
+            elif dtype == torch.bfloat16:
+                with torch.cpu.amp.autocast(enabled=True, dtype=dtype), torch.no_grad():
+                    compiled_model = torch.jit.trace(model, sample_input)
+                    compiled_model = torch.jit.freeze(compiled_model)
+            else:
+                compiled_model = torch.jit.trace(model, sample_input)
+                compiled_model = torch.jit.freeze(compiled_model)
+            print("Compiled with ipex_onednn_graph")
         elif compile_mode == "dynamo":
             compiled_model = torch.compile(
                 model, fullgraph=True, dynamic=False, mode="reduce-overhead"
@@ -165,10 +214,9 @@ class Backend:
             )
             import torch.utils._pytree as pytree
 
-#            debug_timer seems to cause problems:
-#            TypeError: TestOptions.__init__() got an unexpected keyword argument 'debug_timer'
-#            opts = TestOptions(debug_timer=False, use_kernels=True)
-            # opts = TestOptions(use_kernels=True, dumps=['all'])
+            # debug_timer seems to cause problems:
+            # TypeError: TestOptions.__init__() got an unexpected keyword argument 'debug_timer'
+            # opts = TestOptions(debug_timer=False, use_kernels=True)
             opts = TestOptions(use_kernels=True)
             module = jit(
                 model,
@@ -221,3 +269,137 @@ class Backend:
             raise NotImplementedError("Openvino not ready yet.")
         else:
             raise ValueError(f"Unknown execution device {device_name}.")
+
+
+class Benchmark:
+    def __init__(
+        self, net, in_shape, dataset, batch_size, min_batches=10, min_seconds=10
+    ) -> None:
+        self.net = net
+        self.in_shape = in_shape
+        self.dataset = dataset
+        self.batch_size = batch_size
+        self.min_batches = min_batches
+        self.min_seconds = min_seconds
+
+    def compile(self, sample, backend: Backend):
+        self.net = backend.prepare_eval_model(self.net, sample_input=sample)
+
+    def inference(self, backend: Backend):
+        test_loader = torch.utils.data.DataLoader(
+            self.dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=4,
+            pin_memory=backend.device_name == "cuda",
+        )
+
+        tm = TimerManager()
+
+        try:
+            print("Torch cpu capability:", torch.backends.cpu.get_cpu_capability())
+        except:
+            pass
+
+        self.flops_per_sample = get_macs(self.net, self.in_shape, backend) * 2
+
+        sample = next(iter(test_loader))
+        self.compile(sample, backend)
+
+        print("Warmup started")
+        with torch.no_grad():
+            self.net.eval()
+            with tm.timeit("warmup_s"):
+                sample = backend.to_device(sample)
+                self.net(sample)
+                self.net(sample)
+                self.net(sample)
+        print("Warmup done")
+
+        n_items = 0
+
+        self.net.eval()
+        outputs = []
+        fw_times = []
+        with torch.no_grad():
+            start = time.perf_counter()
+            # Duration is inconsistent now
+            with tm.timeit("duration_s"):
+                for i, x in enumerate(test_loader):
+                    s = get_time()
+                    x = backend.to_device(x)
+                    if backend.dtype != torch.float32:
+                        with torch.autocast(
+                            device_type=backend.device_name,
+                            dtype=backend.dtype,
+                        ):
+                            y = self.net(x)
+                    else:
+                        y = self.net(x)
+
+                    fw_times.append(get_time() - s)
+                    n_items += len(x)
+                    outputs.append(y)
+
+                    # early stopping
+                    if (
+                        (time.perf_counter() - start) > self.min_seconds
+                        and n_items > self.batch_size * self.min_batches
+                    ):
+                        break
+
+        print(
+            f"Latency 0%-5%-50%-95%-100% are: {np.percentile(fw_times, [0, 5, 50, 95, 100])}"
+        )
+
+        results = tm.get_results()
+        results["samples_per_s"] = n_items / sum(fw_times)
+        results["flops_per_sample"] = self.flops_per_sample
+
+        return results, outputs
+
+    def train(self):
+        # We are not interested in training yet.
+        # criterion = nn.CrossEntropyLoss()
+        # optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+
+        # N_EPOCHS = 3
+        # epoch_stats = {}
+        # n_report = 10
+        # for epoch in range(n_epochs):  # loop over the dataset multiple times
+        #     running_loss = 0.0
+
+        #     n_items = 0
+        #     start = get_time()
+        #     for i, (x, y) in enumerate(trainloader):
+        #         optimizer.zero_grad()
+
+        #         outputs = net(x)
+        #         loss = criterion(outputs, y)
+        #         loss.backward()
+        #         optimizer.step()
+
+        #         n_items += len(x)
+
+        #         running_loss += loss.item()
+        #         if i % n_report == (n_report - 1):
+        #             print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / n_report:.3f}')
+        #             running_loss = 0.0
+
+        #     stop = get_time()
+        #     print(f"{n_items} took {stop - start}")
+
+        # print('Finished Training')
+        pass
+
+
+def get_macs(model, in_shape, backend):
+    """Calculate MACs, conventional FLOPS = MACs * 2."""
+    from ptflops import get_model_complexity_info
+
+    model.eval()
+    with torch.no_grad():
+        macs, params = get_model_complexity_info(
+            model, in_shape, as_strings=False, print_per_layer_stat=False, verbose=True
+        )
+    return macs
