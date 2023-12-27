@@ -4,19 +4,17 @@ import torch
 from torch.nn import Module, Linear
 import torch.nn.functional as F
 
-from dl_bench.utils import Backend, Benchmark
-
-HIDDEN_LAYER_DIMS = (250, 100)
-INPUT_DIM = 28 * 28
-OUTPUT_DIM = 10
+from dl_bench.utils import Benchmark
+from dl_bench.mlp import RandomInfDataset
+from typing import List
 
 
 class MLP(Module):
-    def __init__(self, input_dim: int, output_dim: int):
+    def __init__(self, input_dim: int, output_dim: int, hidden_l_dims: List):
         super().__init__()
-        self.input_fc = Linear(input_dim, HIDDEN_LAYER_DIMS[0])
-        self.hidden_fc = Linear(*HIDDEN_LAYER_DIMS)
-        self.output_fc = Linear(HIDDEN_LAYER_DIMS[1], output_dim)
+        self.input_fc = Linear(input_dim, hidden_l_dims[0])
+        self.hidden_fc = Linear(*hidden_l_dims)
+        self.output_fc = Linear(hidden_l_dims[1], output_dim)
 
     def forward(self, x):
         # x = [batch size, height, width]
@@ -32,45 +30,21 @@ class MLP(Module):
 
 
 class MlpBasicBenchmark(Benchmark):
-    def run(self, backend: Backend, params):
-        need_train = params.get("need_train", False)
-        rand_inp = torch.rand(1, 1, 28, 28).to(backend.device)
+    def __init__(self, params) -> None:
+        INPUT_H = 28
+        INPUT_W = 28
+        OUTPUT_DIM = 10
+        HIDDEN_LAYER_DIMS = (250, 100)
 
-        model = MLP(INPUT_DIM, OUTPUT_DIM)
+        in_shape = (INPUT_H, INPUT_W)
+        batch_size = 1
 
-        compiled_model = backend.prepare_eval_model(model, rand_inp)
+        dataset = RandomInfDataset(1, in_shape)
 
-        with torch.no_grad():
-            start_time = time.time()
-            output = compiled_model(rand_inp)
-            execution_time = round(time.time() - start_time, 2)
-        if False:
-            # Validate on mnist more comlex, there is an error in torch-mlir dyanmo
-            import tools.validate_accuracy as tva
-
-            loss_vector = []
-            accuracy_vector = []
-            criterion = torch.nn.CrossEntropyLoss()
-            tva.validate_accuracy_mnist(
-                compiled_model,
-                torch.float,
-                criterion,
-                backend.device,
-                loss_vector,
-                accuracy_vector,
-            )
-        if need_train:
-            train(compiled_model, backend.device)
-
-        print(output)
-
-        # if model != compiled_model:
-        #     import tools.compare as cmp
-
-        #     expected = model(rand_inp)
-        #     cmp.compare(expected[0], output[0])
-
-        return {"duration_s": execution_time}
+        net = MLP(INPUT_H * INPUT_W, OUTPUT_DIM, HIDDEN_LAYER_DIMS)
+        super().__init__(
+            net=net, in_shape=in_shape, dataset=dataset, batch_size=batch_size
+        )
 
 
 def train(model: Module, device):

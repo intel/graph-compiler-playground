@@ -51,6 +51,7 @@ jobs:
                   {device: 'cpu', compiler: 'torchscript'},
                   {device: 'cpu', compiler: 'torchscript_onednn'},
                   {device: 'cpu', compiler: 'ipex'},
+                #   {device: 'cpu', compiler: 'ipex_onednn_graph'},
 #                  {device: 'xpu', compiler: 'ipex'},
                   {device: 'cpu', compiler: 'torch_mlir'}
                 ]
