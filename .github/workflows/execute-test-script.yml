@@ -125,7 +125,7 @@ jobs:
                   # This parameter is incredibly important once we use numactl to pick one socket, performance difference was 10x for resnet50 bs=1 torch-inductor
                   export OMP_NUM_THREADS=32
                   if [[ ${LABELS} = *glados* ]]; then
-                      numactl -N 1 ${{ inputs.test_script }}
+                      numactl -C 0-31 --membind=0 ${{ inputs.test_script }}
                   else
                       source ${{ inputs.test_script}}
                   fi
