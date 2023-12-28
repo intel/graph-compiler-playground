@@ -94,7 +94,7 @@ jobs:
                         fi;;
                 esac
 
-                echo db_name="${{ inputs.device }}-${{ inputs.compiler }}-${{ inputs.test_scipt }}-results.db" >> $GITHUB_OUTPUT
+                echo db_name="${{ inputs.device }}-${{ inputs.compiler }}-${{ inputs.test_script }}-results.db" >> $GITHUB_OUTPUT
 
             - uses: actions/checkout@v4
             - uses: ./.github/actions/initial_setup
@@ -165,7 +165,7 @@ jobs:
                 ls -l
 
                 sudo apt update && sudo apt install sqlite3
-                ./db_tools/export_sqlite2csv.sh ${{ steps.set_up_vars.outputs.conda_env }}.db
+                ./db_tools/export_sqlite2csv.sh ${{ steps.set_up_vars.outputs.conda_env.db_name }}
 
                 source ${CONDA}/bin/activate
                 pip install sqlalchemy pandas mysql-connector-python
