@@ -166,7 +166,7 @@ jobs:
                 ls -l
 
                 sudo apt update && sudo apt install sqlite3
-                ./db_tools/export_sqlite2csv.sh ${{ steps.set_up_vars.outputs.conda_env.db_name }}
+                ./db_tools/export_sqlite2csv.sh results.db
 
                 source ${CONDA}/bin/activate
                 pip install sqlalchemy pandas mysql-connector-python
