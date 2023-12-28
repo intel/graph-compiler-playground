@@ -94,7 +94,7 @@ jobs:
                         fi;;
                 esac
 
-                DB_NAME=$(echo "${{ inputs.device }}-${{ inputs.compiler }}-${{ inputs.test_script }}-results" | tr -cd '[:alnum:]')
+                DB_NAME=$(echo "${{ inputs.device }}-${{ inputs.compiler }}-${{ inputs.test_script }}-results" | tr -cd '[:alnum:]-')
                 echo db_name="${DB_NAME}.db" >> $GITHUB_OUTPUT
 
             - uses: actions/checkout@v4
