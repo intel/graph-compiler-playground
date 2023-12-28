@@ -158,19 +158,15 @@ class Backend:
         if compile_mode == "torch":
             compiled_model = model
         elif compile_mode == "torchscript":
-            enabled = dtype != torch.float32
-            with torch.cpu.amp.autocast(enabled=enabled, dtype=dtype), torch.no_grad():
-                compiled_model = torch.jit.trace(model, sample_input)
-                compiled_model = torch.jit.freeze(compiled_model)
+            compiled_model = torch.jit.trace(model, sample_input)
+            compiled_model = torch.jit.freeze(compiled_model)
             print("Compiled with torchscript")
         elif compile_mode == "torchscript_onednn":
             # enable oneDNN graph fusion globally
             torch.jit.enable_onednn_fusion(True)
-            enabled = dtype != torch.float32
-            with torch.cpu.amp.autocast(enabled=enabled, dtype=dtype), torch.no_grad():
-                compiled_model = torch.jit.trace(model, sample_input)
-                compiled_model = torch.jit.freeze(compiled_model)
-                print("Compiled with torchscript onednn")
+            compiled_model = torch.jit.trace(model, sample_input)
+            compiled_model = torch.jit.freeze(compiled_model)
+            print("Compiled with torchscript onednn")
         elif compile_mode == "ipex":
             import intel_extension_for_pytorch as ipex
 
