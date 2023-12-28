@@ -171,17 +171,22 @@ class Backend:
         elif compile_mode == "ipex":
             import intel_extension_for_pytorch
 
-            compiled_model = intel_extension_for_pytorch.optimize(model, sample_input=sample_input)
+            compiled_model = intel_extension_for_pytorch.optimize(
+                model, sample_input=sample_input
+            )
             print("Compiled with ipex")
         elif compile_mode == "ipex_onednn_graph":
             import intel_extension_for_pytorch as ipex
             from intel_extension_for_pytorch.quantization import prepare, convert
+
             # need to set_llga_fp32_bf16_enabled as False, when benchmark int8 dtype
             ipex._C.set_llga_fp32_bf16_enabled(True)
             model.eval()
             if dtype == torch.qint8:
                 qconfig_mapping = ipex.quantization.default_static_qconfig_mapping
-                prepared_model  = prepare(model, qconfig_mapping, example_inputs=sample_input, inplace=False)
+                prepared_model = prepare(
+                    model, qconfig_mapping, example_inputs=sample_input, inplace=False
+                )
                 convert_model = convert(prepared_model)
                 compiled_model = torch.jit.trace(convert_model, sample_input)
                 compiled_model = torch.jit.freeze(compiled_model)
@@ -288,6 +293,9 @@ class Benchmark:
         self.net = backend.prepare_eval_model(self.net, sample_input=sample)
 
     def inference(self, backend: Backend):
+        # timout if running for more than 3 minutes already
+        max_time = 180
+
         test_loader = torch.utils.data.DataLoader(
             self.dataset,
             batch_size=self.batch_size,
@@ -343,11 +351,14 @@ class Benchmark:
                     n_items += len(x)
                     outputs.append(y)
 
-                    # early stopping
+                    # early stopping if we have 10+ batches and were running for 10+ seconds
                     if (
                         (time.perf_counter() - start) > self.min_seconds
                         and n_items > self.batch_size * self.min_batches
                     ):
+                        break
+
+                    if (get_time() - start) > max_time:
                         break
 
         print(
