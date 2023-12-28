@@ -94,7 +94,8 @@ jobs:
                         fi;;
                 esac
 
-                echo db_name="${{ inputs.device }}-${{ inputs.compiler }}-${{ inputs.test_script }}-results.db" >> $GITHUB_OUTPUT
+                DB_NAME=$(echo "${{ inputs.device }}-${{ inputs.compiler }}-${{ inputs.test_script }}-results" | tr -cd '[:alnum:]')
+                echo db_name="${DB_NAME}.db" >> $GITHUB_OUTPUT
 
             - uses: actions/checkout@v4
             - uses: ./.github/actions/initial_setup
