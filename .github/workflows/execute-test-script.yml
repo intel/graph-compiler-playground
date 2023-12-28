@@ -164,10 +164,10 @@ jobs:
               shell: bash -el {0}
               run: |
                 ls -l
-                ls -la  ${{ steps.set_up_vars.outputs.db_name }}
+                ls -la  "${{ steps.set_up_vars.outputs.db_name }}"
 
                 sudo apt update && sudo apt install sqlite3
-                ./db_tools/export_sqlite2csv.sh ${{ steps.set_up_vars.outputs.db_name }}/results.db
+                ./db_tools/export_sqlite2csv.sh "${{ steps.set_up_vars.outputs.db_name }}/results.db"
 
                 source ${CONDA}/bin/activate
                 pip install sqlalchemy pandas mysql-connector-python
