@@ -133,7 +133,7 @@ class Backend:
         self.dtype = str_to_dtype(dtype)
 
     def to_device(self, x: torch.Tensor):
-        if self.device_name in ("cuda", 'xpu'):
+        if self.device_name in ("cuda", "xpu"):
             return x.to(self.device)
         elif self.device_name == "cpu":
             return x
@@ -159,6 +159,7 @@ class Backend:
             compiled_model = model
         elif compile_mode == "torchscript":
             compiled_model = torch.jit.trace(model, sample_input)
+            compiled_model = torch.jit.freeze(compiled_model)
             print("Compiled with torchscript")
         elif compile_mode == "torchscript_onednn":
             # enable oneDNN graph fusion globally
@@ -169,18 +170,21 @@ class Backend:
         elif compile_mode == "ipex":
             import intel_extension_for_pytorch as ipex
 
-            params = {} if dtype != torch.bfloat16 else {'dtype': torch.bfloat16}
+            params = {} if dtype != torch.bfloat16 else {"dtype": torch.bfloat16}
             compiled_model = ipex.optimize(model, sample_input=sample_input, **params)
             print("Compiled with ipex")
         elif compile_mode == "ipex_onednn_graph":
             import intel_extension_for_pytorch as ipex
             from intel_extension_for_pytorch.quantization import prepare, convert
+
             # need to set_llga_fp32_bf16_enabled as False, when benchmark int8 dtype
             ipex._C.set_llga_fp32_bf16_enabled(True)
             model.eval()
             if dtype == torch.qint8:
                 qconfig_mapping = ipex.quantization.default_static_qconfig_mapping
-                prepared_model  = prepare(model, qconfig_mapping, example_inputs=sample_input, inplace=False)
+                prepared_model = prepare(
+                    model, qconfig_mapping, example_inputs=sample_input, inplace=False
+                )
                 convert_model = convert(prepared_model)
                 compiled_model = torch.jit.trace(convert_model, sample_input)
                 compiled_model = torch.jit.freeze(compiled_model)
@@ -259,7 +263,7 @@ class Backend:
         device_name = device_name.lower()
         # TODO: do we really need this import?
         if device_name == "xpu":
-            return 'xpu'
+            return "xpu"
         if device_name in ("cpu", "xpu", "cuda"):
             device = torch.device(device_name)
             return device
