@@ -1,4 +1,4 @@
-name: Run tests on multiple platforms
+name: SPR or AMD full run
 
 on:
     workflow_dispatch:

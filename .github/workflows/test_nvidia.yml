@@ -1,4 +1,4 @@
-name: Run tests on multiple platforms
+name: NVIDIA full run
 
 on:
     workflow_dispatch:
