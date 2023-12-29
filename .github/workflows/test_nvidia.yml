@@ -1,0 +1,55 @@
+name: Run tests on multiple platforms
+
+on:
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: tag to label this run in DB
+                required: true
+                default: "test"
+            shutdown_cloud_runner:
+                description: If you turn this on it will turn off AWS after single config run
+                default: false
+                type: boolean
+            test_scripts:
+                description: Test scripts to execute
+                required: false
+                default: '["./mlp.sh", "./cnn.sh"]'
+                type: string
+
+jobs:
+    print_inputs:
+        runs-on: Linux
+        steps:
+            - name: Print Inputs
+              run: echo "${{ toJSON(github.event.inputs) }}"
+
+    mlp_test:
+        strategy:
+            matrix:
+                type: [
+                  {device: 'cuda', compiler: 'torch'},
+                  {device: 'cuda', compiler: 'dynamo'},
+                  {device: 'cuda', compiler: 'torchscript'},
+                ]
+                test_script: ${{ fromJson(inputs.test_scripts) }}
+            fail-fast: false
+        uses: ./.github/workflows/execute-test-script.yml
+        with:
+            compiler: ${{ matrix.type.compiler }}
+            device: ${{ matrix.type.device }}
+            tag: ${{ inputs.tag }}
+            runner_type: nvidia
+            shutdown_cloud_runner: false
+            test_script: ${{ matrix.test_script }}
+        secrets:
+            DB_URL: ${{ secrets.DB_URL }}
+
+    shutdown:
+        runs-on: [self-hosted, aws, nvidia]
+        if: inputs.shutdown_cloud_runner
+        needs: mlp_test
+        steps:
+            - name: shutdown
+              shell: bash -el {0}
+              run: sudo shutdown -h +2
