@@ -1,4 +1,4 @@
-name: NVIDIA full run
+name: AMD full run
 
 on:
     workflow_dispatch:
@@ -7,8 +7,16 @@ on:
                 description: tag to label this run in DB
                 required: true
                 default: "test"
+            runner_type:
+                description: Type of runner to use
+                required: true
+                default: amd64c
+                type: choice
+                options:
+                    - amd32c
+                    - amd64c
             shutdown_cloud_runner:
-                description: Shutdown aws runner at the end
+                description: Shutdown AWS cluster
                 default: true
                 type: boolean
             test_scripts:
@@ -28,8 +36,9 @@ jobs:
         strategy:
             matrix:
                 type: [
-                  {device: 'cuda', compiler: 'torch'},
-                  {device: 'cuda', compiler: 'dynamo'},
+                  {device: 'cpu', compiler: 'torch'},
+                  {device: 'cpu', compiler: 'dynamo'},
+                  {device: 'cpu', compiler: 'ipex'},
                 ]
                 test_script: ${{ fromJson(inputs.test_scripts) }}
             fail-fast: false
@@ -38,15 +47,17 @@ jobs:
             compiler: ${{ matrix.type.compiler }}
             device: ${{ matrix.type.device }}
             tag: ${{ inputs.tag }}
-            runner_type: nvidia
+            torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
+            torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
+            runner_type: ${{ inputs.runner_type }}
             test_script: ${{ matrix.test_script }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}
 
     shutdown:
-        runs-on: [self-hosted, aws, nvidia]
-        if: inputs.shutdown_cloud_runner
         needs: mlp_test
+        if: inputs.shutdown_cloud_runner
+        runs-on: ${{ inputs.runner_type }}
         steps:
             - name: shutdown
               shell: bash -el {0}

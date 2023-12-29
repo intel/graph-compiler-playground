@@ -1,4 +1,4 @@
-name: SPR or AMD full run
+name: SPR full run
 
 on:
     workflow_dispatch:
@@ -16,19 +16,6 @@ on:
                 description: Torch-MLIR branch to checkout
                 required: true
                 default: cpu-proto
-            runner_type:
-                description: Type of runner to use
-                required: true
-                default: spr
-                type: choice
-                options:
-                    - spr
-                    - amd32c
-                    - amd64c
-            shutdown_cloud_runner:
-                description: Shutdown AWS cluster
-                default: true
-                type: boolean
             test_scripts:
                 description: Test scripts to execute
                 required: false
@@ -64,7 +51,7 @@ jobs:
             tag: ${{ inputs.tag }}
             torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
             torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
-            runner_type: ${{ inputs.runner_type }}
+            runner_type: spr
             shutdown_cloud_runner: false
             test_script: ${{ matrix.test_script }}
         secrets:
@@ -72,7 +59,7 @@ jobs:
 
     shutdown:
         needs: mlp_test
-        if: ${{ contains(inputs.runner_type, 'amd') }} && shutdown_cloud_runner
+        if: ${{ contains(inputs.runner_type, 'amd') }} && inputs.shutdown_cloud_runner
         runs-on: ${{ inputs.runner_type }}
         steps:
             - name: shutdown

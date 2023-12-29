@@ -81,3 +81,12 @@ jobs:
             test_script: ${{ matrix.test_script }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}
+
+    shutdown:
+        needs: mlp_test
+        if: ${{ !contains(inputs.runner_type, 'spr') && inputs.shutdown_cloud_runner }}
+        runs-on: ${{ inputs.runner_type }}
+        steps:
+            - name: shutdown
+              shell: bash -el {0}
+              run: sudo shutdown -h +2
