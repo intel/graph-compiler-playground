@@ -72,7 +72,7 @@ jobs:
 
     shutdown:
         needs: mlp_test
-        if: ${{ contains(inputs.runner_type, 'amd') }} && shutdown_cloud_runner
+        if: ${{ contains(inputs.runner_type, 'amd') }} && inputs.shutdown_cloud_runner
         runs-on: ${{ inputs.runner_type }}
         steps:
             - name: shutdown
