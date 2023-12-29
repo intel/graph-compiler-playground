@@ -55,9 +55,9 @@ jobs:
         runs-on: Linux
         outputs:
             runner_labels: ${{ steps.set_up_vars.outputs.runner_labels }}
-            results_name: ${{ steps.set_up_vars.outputs.db_name }}
+            results_name: ${{ steps.set_up_vars.outputs.results_name }}
         steps:
-            - name: Get runner labels
+            - name: Get conda env and results name for AWS runners
               id: set_up_vars
               shell: bash -el {0}
               run: |
@@ -75,7 +75,7 @@ jobs:
                 esac
 
                 RESULTS_NAME=$(echo "${{ inputs.device }}-${{ inputs.compiler }}-${{ inputs.test_script }}-results" | tr -cd '[:alnum:]-')
-                echo results_name="${RESULTS_NAME}.db" >> $GITHUB_OUTPUT
+                echo "results_name=${RESULTS_NAME}.db" >> $GITHUB_OUTPUT
 
     mlp_test:
         needs: set_up_vars
