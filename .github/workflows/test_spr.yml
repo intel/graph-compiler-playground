@@ -1,4 +1,4 @@
-name: Run tests on multiple platforms
+name: SPR full run
 
 on:
     workflow_dispatch:
@@ -16,19 +16,6 @@ on:
                 description: Torch-MLIR branch to checkout
                 required: true
                 default: cpu-proto
-            runner_type:
-                description: Type of runner to use
-                required: true
-                default: spr
-                type: choice
-                options:
-                    - spr
-                    - amd32c
-                    - amd64c
-                    - nvidia
-            shutdown_cloud_runner:
-                default: true
-                type: boolean
             test_scripts:
                 description: Test scripts to execute
                 required: false
@@ -64,8 +51,7 @@ jobs:
             tag: ${{ inputs.tag }}
             torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
             torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
-            runner_type: ${{ inputs.runner_type }}
-            shutdown_cloud_runner: ${{ inputs.shutdown_cloud_runner }}
+            runner_type: spr
             test_script: ${{ matrix.test_script }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}
