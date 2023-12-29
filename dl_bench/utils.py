@@ -290,6 +290,9 @@ class Benchmark:
         self.net = backend.prepare_eval_model(self.net, sample_input=sample)
 
     def inference(self, backend: Backend):
+        # timout if running for more than 3 minutes already
+        max_time = 180
+
         test_loader = torch.utils.data.DataLoader(
             self.dataset,
             batch_size=self.batch_size,
@@ -345,11 +348,14 @@ class Benchmark:
                     n_items += len(x)
                     outputs.append(y)
 
-                    # early stopping
+                    # early stopping if we have 10+ batches and were running for 10+ seconds
                     if (
                         (time.perf_counter() - start) > self.min_seconds
                         and n_items > self.batch_size * self.min_batches
                     ):
+                        break
+
+                    if (get_time() - start) > max_time:
                         break
 
         print(
