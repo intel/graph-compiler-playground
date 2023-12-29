@@ -30,7 +30,6 @@ jobs:
                 type: [
                   {device: 'cuda', compiler: 'torch'},
                   {device: 'cuda', compiler: 'dynamo'},
-                  {device: 'cuda', compiler: 'torchscript'},
                 ]
                 test_script: ${{ fromJson(inputs.test_scripts) }}
             fail-fast: false

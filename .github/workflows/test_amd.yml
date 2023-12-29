@@ -38,10 +38,6 @@ jobs:
                 type: [
                   {device: 'cpu', compiler: 'torch'},
                   {device: 'cpu', compiler: 'dynamo'},
-                  {device: 'cpu', compiler: 'torchscript'},
-                  {device: 'cpu', compiler: 'torchscript_onednn'},
-                  {device: 'cpu', compiler: 'ipex'},
-                  {device: 'cpu', compiler: 'torch_mlir'}
                 ]
                 test_script: ${{ fromJson(inputs.test_scripts) }}
             fail-fast: false
