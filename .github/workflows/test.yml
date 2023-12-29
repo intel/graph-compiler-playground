@@ -1,4 +1,4 @@
-name: SPR full run
+name: Run tests on multiple platforms
 
 on:
     workflow_dispatch:
@@ -16,6 +16,19 @@ on:
                 description: Torch-MLIR branch to checkout
                 required: true
                 default: cpu-proto
+            runner_type:
+                description: Type of runner to use
+                required: true
+                default: spr
+                type: choice
+                options:
+                    - spr
+                    - amd32c
+                    - amd64c
+            shutdown_cloud_runner:
+                description: If you turn this on it will turn off AWS after single config run
+                default: false
+                type: boolean
             test_scripts:
                 description: Test scripts to execute
                 required: false
@@ -51,7 +64,8 @@ jobs:
             tag: ${{ inputs.tag }}
             torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
             torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
-            runner_type: spr
+            runner_type: ${{ inputs.runner_type }}
+            shutdown_cloud_runner: ${{ inputs.shutdown_cloud_runner }}
             test_script: ${{ matrix.test_script }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}
