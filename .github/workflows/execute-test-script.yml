@@ -51,13 +51,14 @@ jobs:
             - name: Print Inputs
               run: echo "${{ toJSON(github.event.inputs) }}"
 
-    get_runner_labels:
+    set_up_vars:
         runs-on: Linux
         outputs:
-            runner_labels: ${{ steps.get_runner_labels.outputs.runner_labels }}
+            runner_labels: ${{ steps.set_up_vars.outputs.runner_labels }}
+            results_name: ${{ steps.set_up_vars.outputs.db_name }}
         steps:
             - name: Get runner labels
-              id: get_runner_labels
+              id: set_up_vars
               shell: bash -el {0}
               run: |
                 case "${{ inputs.runner_type }}" in
@@ -73,12 +74,15 @@ jobs:
                         echo "runner_labels=unknown" >> $GITHUB_OUTPUT;;
                 esac
 
+                RESULTS_NAME=$(echo "${{ inputs.device }}-${{ inputs.compiler }}-${{ inputs.test_script }}-results" | tr -cd '[:alnum:]-')
+                echo results_name="${RESULTS_NAME}.db" >> $GITHUB_OUTPUT
+
     mlp_test:
-        needs: get_runner_labels
-        runs-on: ${{ fromJSON(needs.get_runner_labels.outputs.runner_labels) }}
+        needs: set_up_vars
+        runs-on: ${{ fromJSON(needs.set_up_vars.outputs.runner_labels) }}
         steps:
             - name: Guess conda env from device and compiler parameters
-              id: set_up_vars
+              id: guess_conda_env
               shell: bash -el {0}
               run: |
                 case "${{ inputs.compiler }}" in
@@ -94,13 +98,11 @@ jobs:
                         fi;;
                 esac
 
-                DB_NAME=$(echo "${{ inputs.device }}-${{ inputs.compiler }}-${{ inputs.test_script }}-results" | tr -cd '[:alnum:]-')
-                echo db_name="${DB_NAME}.db" >> $GITHUB_OUTPUT
 
             - uses: actions/checkout@v4
             - uses: ./.github/actions/initial_setup
               with:
-                  conda_env: ${{ steps.set_up_vars.outputs.conda_env }}
+                  conda_env: ${{ steps.guess_conda_env.outputs.conda_env }}
                   compiler: ${{ inputs.compiler }}
                   torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
                   torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
@@ -108,10 +110,10 @@ jobs:
             - name: Run MLP test on specific compiler
               shell: bash -el {0}
               run: |
-                  source ${CONDA}/bin/activate ${{ steps.set_up_vars.outputs.conda_env }}
+                  source ${CONDA}/bin/activate ${{ steps.guess_conda_env.outputs.conda_env }}
 
                   export ONEDNN_VERBOSE=0
-                  LABELS='${{ needs.get_runner_labels.outputs.runner_labels }}'
+                  LABELS='${{ needs.set_up_vars.outputs.runner_labels }}'
                   if [[ ${LABELS} = *glados* ]]; then
                       URL="--url ${{ secrets.DB_URL }}"
                   fi
@@ -135,39 +137,38 @@ jobs:
 
 
             - name: Upload results.db to artifacts when running in AWS
-              if: contains(fromJSON(needs.get_runner_labels.outputs.runner_labels), 'aws')
+              if: contains(fromJSON(needs.set_up_vars.outputs.runner_labels), 'aws')
               uses: actions/upload-artifact@v3
               with:
-                  name: ${{ steps.set_up_vars.outputs.db_name }}
+                  name: ${{ needs.set_up_vars.outputs.results_name }}
                   path: results.db
 
             - name: Shutdown AWS cloud runner
-              if: contains(fromJSON(needs.get_runner_labels.outputs.runner_labels), 'aws') && inputs.shutdown_cloud_runner
+              if: contains(fromJSON(needs.set_up_vars.outputs.runner_labels), 'aws') && inputs.shutdown_cloud_runner
               shell: bash -el {0}
               run: sudo shutdown -h +2
 
     parse_results:
         runs-on: [self-hosted, glados, spr]
         needs:
-            - get_runner_labels
+            - set_up_vars
             - mlp_test
-        if: contains(fromJSON(needs.get_runner_labels.outputs.runner_labels), 'aws')
+        if: contains(fromJSON(needs.set_up_vars.outputs.runner_labels), 'aws')
         steps:
             - uses: actions/checkout@v4
             - name: Download results.db from artifacts
               uses: actions/download-artifact@v3
               with:
-                  name: ${{ steps.set_up_vars.outputs.db_name }}
+                  name: ${{ needs.set_up_vars.outputs.results_name }}
                   path: .
 
             - name: Upload results into DB
               shell: bash -el {0}
               run: |
                 ls -l
-                ls -la  "${{ steps.set_up_vars.outputs.db_name }}"
 
                 sudo apt update && sudo apt install sqlite3
-                ./db_tools/export_sqlite2csv.sh "${{ steps.set_up_vars.outputs.db_name }}/results.db"
+                ./db_tools/export_sqlite2csv.sh results.db
 
                 source ${CONDA}/bin/activate
                 pip install sqlalchemy pandas mysql-connector-python
