@@ -39,7 +39,6 @@ jobs:
             device: ${{ matrix.type.device }}
             tag: ${{ inputs.tag }}
             runner_type: nvidia
-            shutdown_cloud_runner: false
             test_script: ${{ matrix.test_script }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}

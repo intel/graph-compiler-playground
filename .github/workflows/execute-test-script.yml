@@ -33,7 +33,7 @@ on:
             shutdown_cloud_runner:
                 description: Whether to shutdown AWS cloud runner
                 required: false
-                default: true
+                default: false
                 type: boolean
             test_script:
                 description: Test script to run
