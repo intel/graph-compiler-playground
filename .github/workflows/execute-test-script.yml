@@ -17,13 +17,13 @@ on:
                 description: Tag to label this result in DB
             torch_mlir_repo:
                 description: Torch-MLIR repository on github
-                required: true
                 default: intel-ai/torch-mlir
+                required: false
                 type: string
             torch_mlir_branch:
                 description: Torch-MLIR branch to checkout
-                required: true
                 default: cpu-proto
+                required: false
                 type: string
             runner_type:
                 description: Type of runner to use

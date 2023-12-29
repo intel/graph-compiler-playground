@@ -1,4 +1,4 @@
-name: Run tests on multiple platforms
+name: NVIDIA full run
 
 on:
     workflow_dispatch:
@@ -8,8 +8,8 @@ on:
                 required: true
                 default: "test"
             shutdown_cloud_runner:
-                description: If you turn this on it will turn off AWS after single config run
-                default: false
+                description: Shutdown aws runner at the end
+                default: true
                 type: boolean
             test_scripts:
                 description: Test scripts to execute

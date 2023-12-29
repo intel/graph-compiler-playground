@@ -1,4 +1,4 @@
-name: Run tests on multiple platforms
+name: SPR or AMD full run
 
 on:
     workflow_dispatch:
@@ -25,8 +25,8 @@ on:
                     - spr
                     - amd32c
                     - amd64c
-                    - nvidia
             shutdown_cloud_runner:
+                description: Shutdown AWS cluster
                 default: true
                 type: boolean
             test_scripts:
@@ -65,7 +65,16 @@ jobs:
             torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
             torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
             runner_type: ${{ inputs.runner_type }}
-            shutdown_cloud_runner: ${{ inputs.shutdown_cloud_runner }}
+            shutdown_cloud_runner: false
             test_script: ${{ matrix.test_script }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}
+
+    shutdown:
+        needs: mlp_test
+        if: ${{ contains(inputs.runner_type, 'amd') }} && shutdown_cloud_runner
+        runs-on: ${{ inputs.runner_type }}
+        steps:
+            - name: shutdown
+              shell: bash -el {0}
+              run: sudo shutdown -h +2
