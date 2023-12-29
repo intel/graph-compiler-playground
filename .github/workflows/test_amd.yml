@@ -1,0 +1,68 @@
+name: AMD full run
+
+on:
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: tag to label this run in DB
+                required: true
+                default: "test"
+            runner_type:
+                description: Type of runner to use
+                required: true
+                default: amd64c
+                type: choice
+                options:
+                    - amd32c
+                    - amd64c
+            shutdown_cloud_runner:
+                description: Shutdown AWS cluster
+                default: true
+                type: boolean
+            test_scripts:
+                description: Test scripts to execute
+                required: false
+                default: '["./mlp.sh", "./cnn.sh"]'
+                type: string
+
+jobs:
+    print_inputs:
+        runs-on: Linux
+        steps:
+            - name: Print Inputs
+              run: echo "${{ toJSON(github.event.inputs) }}"
+
+    mlp_test:
+        strategy:
+            matrix:
+                type: [
+                  {device: 'cpu', compiler: 'torch'},
+                  {device: 'cpu', compiler: 'dynamo'},
+                  {device: 'cpu', compiler: 'torchscript'},
+                  {device: 'cpu', compiler: 'torchscript_onednn'},
+                  {device: 'cpu', compiler: 'ipex'},
+                  {device: 'cpu', compiler: 'torch_mlir'}
+                ]
+                test_script: ${{ fromJson(inputs.test_scripts) }}
+            fail-fast: false
+        uses: ./.github/workflows/execute-test-script.yml
+        with:
+            compiler: ${{ matrix.type.compiler }}
+            device: ${{ matrix.type.device }}
+            tag: ${{ inputs.tag }}
+            torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
+            torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
+            runner_type: ${{ inputs.runner_type }}
+            shutdown_cloud_runner: false
+            test_script: ${{ matrix.test_script }}
+        secrets:
+            DB_URL: ${{ secrets.DB_URL }}
+
+    shutdown:
+        needs: mlp_test
+        if: inputs.shutdown_cloud_runner
+        runs-on: ${{ inputs.runner_type }}
+        steps:
+            - name: shutdown
+              shell: bash -el {0}
+              run: sudo shutdown -h +2
