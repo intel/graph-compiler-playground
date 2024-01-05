@@ -125,6 +125,8 @@ def parse_benchmark_params(params_txt):
     print(f"{params_txt}")
     key2val = {}
     for row in params_txt.split(","):
+        if len(row.strip()) == 0:
+            continue
         print(row)
         key, val = row.split("=")
         key2val[key] = literal_eval(val)
