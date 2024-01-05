@@ -3,10 +3,10 @@ import time
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from dl_bench.utils import TimerManager, Benchmark
+from dl_bench.utils import TimerManager, Benchmark, str_to_dtype
 
 
-def get_llm(name, dtype=torch.float32):
+def get_llm(name, dtype):
     if name != "gptj":
         raise ValueError("Unsupported model name")
 
@@ -20,7 +20,8 @@ def get_llm(name, dtype=torch.float32):
 class LlmBenchmark(Benchmark):
     def __init__(self, params) -> None:
         name = params.get("name", "gptj")
-        self.tokenizer, self.model = get_llm(name)
+        dtype = params.get("dtype")
+        self.tokenizer, self.model = get_llm(name, dtype=str_to_dtype(dtype))
         self.warmup_prompt = "There are several ways to travel, but my favourite is"
         self.prompt = "Here is a story about a person that find out he was adopted: one day little Timmy was looking through old"
         self.gen_kwargs = {
