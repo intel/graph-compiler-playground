@@ -51,15 +51,18 @@ class LlmBenchmark(Benchmark):
         self.model = backend.prepare_eval_transformer(self.model)
 
         print("Warmup started")
-        with torch.no_grad(), tm.timeit("warmup_s"):
+        with torch.inference_mode(), tm.timeit("warmup_s"):
             self.model.eval()
             self.generate(self.warmup_prompt)
         print("Warmup done")
 
         self.model.eval()
-        with torch.no_grad(), tm.timeit("duration_s"):
+        enabled = backend.dtype != torch.float32
+        with torch.inference_mode(), torch.autocast(
+            enabled=enabled, device_type=backend.device_name
+        ), tm.timeit("duration_s"):
             tokens, total_time = self.generate(self.prompt)
-            outputs = [tokens]
+        outputs = [tokens]
 
         results = tm.get_results()
         results["samples_per_s"] = len(tokens) / total_time

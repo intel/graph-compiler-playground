@@ -151,8 +151,10 @@ class Backend:
             raise ValueError("Unknown device")
 
     def prepare_eval_transformer(self, model):
+        model = model.to(memory_format=torch.channels_last)
+
         model.to(self.device)
-        with torch.no_grad():
+        with torch.inference_mode():
             model.eval()
             return self._compile_transformer_model(
                 self.compile_mode, model, dtype=self.dtype
