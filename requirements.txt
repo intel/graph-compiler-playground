@@ -2,6 +2,7 @@
 # torchvision
 sqlalchemy
 ptflops
+transformers
 # For DB operations
 mysql-connector-python
 pandas

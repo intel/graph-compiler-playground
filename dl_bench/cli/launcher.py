@@ -5,6 +5,7 @@ from ast import literal_eval
 
 from dl_bench.mlp import MlpBenchmark
 from dl_bench.cnn import CnnBenchmark
+from dl_bench.llm import LlmBenchmark
 from dl_bench.mlp_basic import MlpBasicBenchmark
 from dl_bench.report.report import BenchmarkDb
 from dl_bench.utils import Backend
@@ -14,6 +15,7 @@ benchmarks_table = {
     "mlp_oneiter": MlpBasicBenchmark,
     "mlp": MlpBenchmark,
     "cnn": CnnBenchmark,
+    "llm": LlmBenchmark,
 }
 
 
@@ -36,7 +38,7 @@ def parse_args():
     parser.add_argument(
         "-b",
         "--benchmark",
-        choices=list(benchmarks_table.keys()),
+        choices=list(benchmarks_table),
         help="Benchmark to run.",
     )
     parser.add_argument(
