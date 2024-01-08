@@ -5,6 +5,7 @@ from ast import literal_eval
 
 from dl_bench.mlp import MlpBenchmark
 from dl_bench.cnn import CnnBenchmark
+from dl_bench.llm import LlmBenchmark
 from dl_bench.mlp_basic import MlpBasicBenchmark
 from dl_bench.report.report import BenchmarkDb
 from dl_bench.utils import Backend
@@ -14,6 +15,7 @@ benchmarks_table = {
     "mlp_oneiter": MlpBasicBenchmark,
     "mlp": MlpBenchmark,
     "cnn": CnnBenchmark,
+    "llm": LlmBenchmark,
 }
 
 
@@ -36,7 +38,7 @@ def parse_args():
     parser.add_argument(
         "-b",
         "--benchmark",
-        choices=list(benchmarks_table.keys()),
+        choices=list(benchmarks_table),
         help="Benchmark to run.",
     )
     parser.add_argument(
@@ -123,6 +125,8 @@ def parse_benchmark_params(params_txt):
     print(f"{params_txt}")
     key2val = {}
     for row in params_txt.split(","):
+        if len(row.strip()) == 0:
+            continue
         print(row)
         key, val = row.split("=")
         key2val[key] = literal_eval(val)
@@ -146,6 +150,7 @@ def main():
     backend_desc = args.backend_desc or f"{host}_{device}_{compiler}"
     if dtype != "float32":
         backend_desc += "_" + str(dtype)
+    benchmark_params["dtype"] = dtype
 
     backend = Backend(device=device, compiler=compiler, dtype=dtype)
     benchmark = benchmarks_table[benchmark_name](benchmark_params)

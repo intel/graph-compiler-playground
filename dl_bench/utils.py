@@ -125,8 +125,18 @@ def str_to_dtype(dtype: str):
         raise ValueError(f"Unsupported data type: {dtype}")
 
 
+def print_cpu_capability():
+    try:
+        text = str(torch.backends.cpu.get_cpu_capability())
+    except:
+        text = "N/A"
+    print("Torch cpu capability:", text)
+
+
 class Backend:
     def __init__(self, device, compiler, dtype="float32") -> None:
+        print_cpu_capability()
+
         self.device_name = device
         self.device = self._get_device(device_name=device)
         self.compile_mode = compiler
@@ -139,6 +149,57 @@ class Backend:
             return x
         else:
             raise ValueError("Unknown device")
+
+    def prepare_eval_transformer(self, model):
+        model = model.to(memory_format=torch.channels_last)
+
+        model.to(self.device)
+        with torch.inference_mode():
+            model.eval()
+            return self._compile_transformer_model(
+                self.compile_mode, model, dtype=self.dtype
+            )
+
+    @staticmethod
+    def _compile_transformer_model(compile_mode, model, dtype=torch.bfloat16):
+        compile_mode = compile_mode.lower()
+        # Empty string means no compilation
+        if compile_mode == "torch":
+            compiled_model = model
+        elif compile_mode == "torchscript":
+            raise NotImplementedError()
+            compiled_model = torch.jit.trace(model, sample_input)
+            compiled_model = torch.jit.freeze(compiled_model)
+            print("Compiled with torchscript")
+        elif compile_mode == "torchscript_onednn":
+            raise NotImplementedError()
+            # enable oneDNN graph fusion globally
+            torch.jit.enable_onednn_fusion(True)
+            compiled_model = torch.jit.trace(model, sample_input)
+            compiled_model = torch.jit.freeze(compiled_model)
+            print("Compiled with torchscript onednn")
+        elif compile_mode == "ipex":
+            import intel_extension_for_pytorch as ipex
+
+            params = {} if dtype != torch.bfloat16 else {"dtype": torch.bfloat16}
+            compiled_model = ipex.optimize_transformers(model, **params)
+            print("Compiled with ipex")
+        elif compile_mode == "ipex_onednn_graph":
+            raise NotImplementedError()
+            print("Compiled with ipex_onednn_graph")
+        elif compile_mode == "dynamo":
+            compiled_model = torch.compile(
+                model, fullgraph=True, dynamic=False, mode="reduce-overhead"
+            )
+            print("Compiled with dynamo")
+        elif compile_mode == "torch_mlir_default_inference":
+            raise NotImplementedError()
+        elif compile_mode == "torch_mlir":
+            raise NotImplementedError()
+        else:
+            raise ValueError(f"Unsupported mode {compile_mode}")
+
+        return compiled_model
 
     def prepare_eval_model(self, model, sample_input):
         model.to(self.device)
