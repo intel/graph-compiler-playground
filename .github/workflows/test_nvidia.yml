@@ -14,7 +14,7 @@ on:
             test_scripts:
                 description: Test scripts to execute
                 required: false
-                default: '["./mlp.sh", "./cnn.sh"]'
+                default: '["./mlp.sh", "./cnn.sh", "./llm.sh"]'
                 type: string
 
 jobs:
