@@ -150,6 +150,7 @@ def main():
     backend_desc = args.backend_desc or f"{host}_{device}_{compiler}"
     if dtype != "float32":
         backend_desc += "_" + str(dtype)
+    benchmark_params["dtype"] = dtype
 
     backend = Backend(device=device, compiler=compiler, dtype=dtype)
     benchmark = benchmarks_table[benchmark_name](benchmark_params)
