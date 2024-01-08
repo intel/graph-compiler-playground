@@ -182,7 +182,7 @@ class Backend:
             import intel_extension_for_pytorch as ipex
 
             params = {} if dtype != torch.bfloat16 else {"dtype": torch.bfloat16}
-            compiled_model = ipex.optimize_transformer(model, **params)
+            compiled_model = ipex.optimize_transformers(model, **params)
             print("Compiled with ipex")
         elif compile_mode == "ipex_onednn_graph":
             raise NotImplementedError()
