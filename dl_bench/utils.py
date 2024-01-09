@@ -375,10 +375,18 @@ class Benchmark:
         self.compile(sample, backend)
 
         print("Warmup started")
-        with torch.no_grad():
+        with torch.no_grad(), tm.timeit("warmup_s"):
             self.net.eval()
-            with tm.timeit("warmup_s"):
-                sample = backend.to_device(sample)
+            sample = backend.to_device(sample)
+            if backend.dtype != torch.float32:
+                with torch.autocast(
+                    device_type=backend.device_name,
+                    dtype=backend.dtype,
+                ):
+                    self.net(sample)
+                    self.net(sample)
+                    self.net(sample)
+            else:
                 self.net(sample)
                 self.net(sample)
                 self.net(sample)
