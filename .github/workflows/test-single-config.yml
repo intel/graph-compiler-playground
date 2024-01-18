@@ -21,6 +21,7 @@ on:
                     - torch
                     - dynamo
                     - torch_mlir
+                    - torch_mlir_xsmm
                     - torchscript
                     - torchscript_onednn
                     - ipex
