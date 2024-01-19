@@ -268,7 +268,7 @@ class Backend:
 
             compiled_model = dynamo.optimize(be.refbackend_torchdynamo_backend)(model)
             print("Compiled with torch_mlir (torchscript, inference)")
-        elif compile_mode == "torch_mlir":
+        elif compile_mode == "torch_mlir" or compile_mode == "torch_mlir_xsmm":
             from torch_mlir._dynamo_fx_importer import import_fx_graph_as_func
             from torch_mlir_e2e_test.configs.torchdynamo import jit
             from torch_mlir_e2e_test.framework import TestOptions
@@ -276,6 +276,9 @@ class Backend:
             # from torch_mlir_e2e_test.linalg_on_tensors_backends.refbackend import RefBackendLinalgOnTensorsBackend
             from torch_mlir_e2e_test.linalg_on_tensors_backends.cpuprotobackend import (
                 CpuProtoLinalgOnTensorsBackend,
+            )
+            from torch_mlir_e2e_test.linalg_on_tensors_backends.xsmmprotobackend import (
+                XsmmProtoLinalgOnTensorsBackend,
             )
             import torch.utils._pytree as pytree
 
@@ -290,7 +293,7 @@ class Backend:
                 opts,
                 output_type="linalg-on-tensors",
             )
-            backend = CpuProtoLinalgOnTensorsBackend(opts)
+            backend = CpuProtoLinalgOnTensorsBackend(opts) if compile_mode == "torch_mlir" else XsmmProtoLinalgOnTensorsBackend(opts)
             # backend = RefBackendLinalgOnTensorsBackend()
             module = backend.compile(module)
             backend_module = backend.load(module)
