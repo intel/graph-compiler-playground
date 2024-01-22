@@ -21,6 +21,9 @@ on:
                 required: false
                 default: '["./mlp.sh", "./cnn.sh", "./llm.sh"]'
                 type: string
+    schedule:
+        # Runs at 12pm UTC (6am CST) on every Saturday
+        - cron: "0 12 * * 6"
 
 jobs:
     print_inputs:
@@ -43,15 +46,15 @@ jobs:
                   {device: 'cpu', compiler: 'torch_mlir'},
                   {device: 'cpu', compiler: 'torch_mlir_xsmm'}
                 ]
-                test_script: ${{ fromJson(inputs.test_scripts) }}
+                test_script: ${{ github.event_name == 'workflow_dispatch' && fromJson(inputs.test_scripts) || fromJson('["./mlp.sh", "./cnn.sh", "./llm.sh"]') }}
             fail-fast: false
         uses: ./.github/workflows/execute-test-script.yml
         with:
             compiler: ${{ matrix.type.compiler }}
             device: ${{ matrix.type.device }}
-            tag: ${{ inputs.tag }}
-            torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
-            torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
+            tag: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'ci' }}
+            torch_mlir_repo: ${{ github.event_name == 'workflow_dispatch' && inputs.torch_mlir_repo || 'intel-ai/torch-mlir' }}
+            torch_mlir_branch: ${{ github.event_name == 'workflow_dispatch' && inputs.torch_mlir_branch || 'cpu-proto' }}
             runner_type: spr
             shutdown_cloud_runner: false
             test_script: ${{ matrix.test_script }}
