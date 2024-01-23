@@ -2,7 +2,8 @@
 
 set -x
 
-export ONEDNN_VERBOSE=0
+export ONEDNN_VERBOSE=all
+export ONEDNN_VERBOSE_TIMESTAMP=1
 
 if [[ -z "${DL_BENCH_ARGS}" ]]; then
   echo "Please, provide DL_BENCH_ARGS environment variable"
