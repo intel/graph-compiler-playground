@@ -121,6 +121,8 @@ def str_to_dtype(dtype: str):
         return torch.float32
     elif dtype == "bfloat16":
         return torch.bfloat16
+    elif dtype == "int8":
+        return torch.qint8
     else:
         raise ValueError(f"Unsupported data type: {dtype}")
 
@@ -404,9 +406,9 @@ class Benchmark:
             start = time.perf_counter()
             # Duration is inconsistent now
             with tm.timeit("duration_s"):
-                for i, x in enumerate(test_loader):
+                while True:
                     s = get_time()
-                    x = backend.to_device(x)
+                    x = backend.to_device(sample)
                     if backend.dtype != torch.float32:
                         with torch.autocast(
                             device_type=backend.device_name,
