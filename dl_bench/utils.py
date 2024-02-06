@@ -406,9 +406,9 @@ class Benchmark:
             start = time.perf_counter()
             # Duration is inconsistent now
             with tm.timeit("duration_s"):
-                while True:
+                for i, x in enumerate(test_loader):
                     s = get_time()
-                    x = backend.to_device(sample)
+                    x = backend.to_device(x)
                     if backend.dtype != torch.float32:
                         with torch.autocast(
                             device_type=backend.device_name,
@@ -417,7 +417,7 @@ class Benchmark:
                             y = self.net(x)
                     else:
                         y = self.net(x)
-
+                    if i < 3: continue
                     fw_times.append(get_time() - s)
                     n_items += len(x)
                     outputs.append(y)
