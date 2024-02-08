@@ -2,6 +2,7 @@ name: cpu
 channels:
   - pytorch
 dependencies:
+  - python==3.11
   - pytorch
   - torchvision
   - torchaudio
