@@ -38,13 +38,13 @@ jobs:
             compiler: ${{ matrix.type.compiler }}
             device: ${{ matrix.type.device }}
             tag: ${{ inputs.tag }}
-            runner_type: nvidia
+            runner_type: a100
             test_script: ${{ matrix.test_script }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}
 
     shutdown:
-        runs-on: [self-hosted, aws, nvidia]
+        runs-on: a100
         if: inputs.shutdown_cloud_runner
         needs: mlp_test
         steps:
