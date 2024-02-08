@@ -121,6 +121,8 @@ def str_to_dtype(dtype: str):
         return torch.float32
     elif dtype == "bfloat16":
         return torch.bfloat16
+    elif dtype == "int8":
+        return torch.qint8
     else:
         raise ValueError(f"Unsupported data type: {dtype}")
 
@@ -415,7 +417,7 @@ class Benchmark:
                             y = self.net(x)
                     else:
                         y = self.net(x)
-
+                    if i < 3: continue
                     fw_times.append(get_time() - s)
                     n_items += len(x)
                     outputs.append(y)
