@@ -34,10 +34,10 @@ def get_inf_loaders(n, in_shape, batch_size, device: str):
 
     ds = RandomInfDataset(n, in_shape)
     train_loader = DataLoader(
-        ds, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=pin_memory
+        ds, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=pin_memory
     )
     test_loader = DataLoader(
-        ds, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=pin_memory
+        ds, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=pin_memory
     )
     return train_loader, test_loader
 
@@ -363,7 +363,7 @@ class Benchmark:
             self.dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            num_workers=4,
+            num_workers=0,
             pin_memory=backend.device_name == "cuda",
         )
 
