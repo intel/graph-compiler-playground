@@ -34,12 +34,14 @@ class CnnBenchmark(Benchmark):
 
         in_shape = (3, 224, 224)
         min_batches = 10
-        DATASET_SIZE = max(10_240, batch_size * min_batches)
+        min_seconds = 20
+        warmup = 10
+        DATASET_SIZE = max(10_240, batch_size * (min_batches + warmup))
         dataset = RandomInfDataset(DATASET_SIZE, in_shape)
 
         name = params.get("name", "resnet50")
         net = get_cnn(name=name)
 
         super().__init__(
-            net=net, in_shape=in_shape, dataset=dataset, batch_size=batch_size
+            net=net, in_shape=in_shape, dataset=dataset, batch_size=batch_size, min_batches=min_batches, warmup_batches=warmup, min_seconds=min_seconds
         )
