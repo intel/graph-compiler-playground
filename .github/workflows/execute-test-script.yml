@@ -68,8 +68,12 @@ jobs:
                         echo 'runner_labels=["self-hosted", "amd32c", "aws"]' >> $GITHUB_OUTPUT;;
                     amd64c)
                         echo 'runner_labels=["self-hosted", "amd64c", "aws"]' >> $GITHUB_OUTPUT;;
-                    nvidia)
-                        echo 'runner_labels=["self-hosted", "nvidia", "aws"]' >> $GITHUB_OUTPUT;;
+                    genoa60c)
+                        echo 'runner_labels=["self-hosted", "genoa", "60c", "gcp"]' >> $GITHUB_OUTPUT;;
+                    a100)
+                        echo 'runner_labels=["self-hosted", "nvidia", "a100"]' >> $GITHUB_OUTPUT;;
+                    v100)
+                        echo 'runner_labels=["self-hosted", "nvidia", "v100"]' >> $GITHUB_OUTPUT;;
                     *)
                         echo "runner_labels=unknown" >> $GITHUB_OUTPUT;;
                 esac

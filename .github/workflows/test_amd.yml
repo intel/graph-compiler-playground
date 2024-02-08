@@ -10,11 +10,12 @@ on:
             runner_type:
                 description: Type of runner to use
                 required: true
-                default: amd64c
+                default: genoa60c
                 type: choice
                 options:
                     - amd32c
                     - amd64c
+                    - genoa60c
             shutdown_cloud_runner:
                 description: Shutdown AWS cluster
                 default: true
