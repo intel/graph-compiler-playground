@@ -3,7 +3,6 @@ channels:
   - intel
   - conda-forge
 dependencies:
-  - python==3.11
   - intel-aikit-pytorch
   - pytorch>=2.0.1=*_xpu_*
   - intel-extension-for-pytorch
