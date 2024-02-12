@@ -170,7 +170,7 @@ jobs:
               run: |
                 ls -l
 
-                sudo apt update && sudo apt install sqlite3
+                sudo apt update && sudo apt install -y sqlite3
                 ./db_tools/export_sqlite2csv.sh
 
                 source ${CONDA}/bin/activate
