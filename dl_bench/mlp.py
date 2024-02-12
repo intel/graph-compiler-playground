@@ -81,8 +81,10 @@ class MlpBenchmark(Benchmark):
 
         batch_size = int(params.get("batch_size", 1024))
 
-        min_batches = 20
-        DATASET_SIZE = max(102_400, batch_size * min_batches)
+        min_batches = int(params.get("min_batches", 20))
+        min_seconds = int(params.get("min_seconds", 20))
+        warmup = 10
+        DATASET_SIZE = max(102_400, batch_size * (min_batches + warmup))
         dataset = RandomInfDataset(DATASET_SIZE, in_shape)
 
         name = params.get("name", "size5")
@@ -91,6 +93,11 @@ class MlpBenchmark(Benchmark):
         min_seconds = int(params.get("min_seconds", 10))
 
         super().__init__(
-            net=net, in_shape=in_shape, dataset=dataset, batch_size=batch_size,\
-                min_batches=min_batches, min_seconds=min_seconds, warmup_batches=10
+            net=net,
+            in_shape=in_shape,
+            dataset=dataset,
+            batch_size=batch_size,
+            min_batches=min_batches,
+            min_seconds=min_seconds,
+            warmup_batches=warmup,
         )
