@@ -152,6 +152,10 @@ class Backend:
         else:
             raise ValueError("Unknown device")
 
+    def sync(self):
+        if self.device_name == 'cuda':
+            torch.cuda.synchronize()
+
     def prepare_eval_transformer(self, model):
         model = model.to(memory_format=torch.channels_last)
 
@@ -390,6 +394,7 @@ class Benchmark:
             # Duration is inconsistent now
             with tm.timeit("duration_s"):
                 for i, x in enumerate(test_loader):
+                    backend.sync()
                     s = get_time()
                     x = backend.to_device(x)
                     if backend.dtype != torch.float32:
@@ -405,6 +410,7 @@ class Benchmark:
                         start = time.perf_counter()
                         continue
 
+                    backend.sync()
                     fw_times.append(get_time() - s)
                     n_items += len(x)
                     outputs.append(y)
