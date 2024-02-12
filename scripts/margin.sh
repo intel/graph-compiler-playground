@@ -18,7 +18,7 @@ do
 	      for name in "${CNNS[@]}"
 	      do
 		  echo "Benchmark $name with BS=$BS and DTYPE=$DTYPE"
-		  numactl -N 1 benchmark-run -b cnn -p "name='${name}',batch_size='$BS'" --dtype "${DTYPE}" --benchmark_desc "${name}_bs$BS" --host "${HOST}" -c "${COMPILER}"
+		  numactl -N 1 benchmark-run -b cnn -p "name='${name}',batch_size='$BS'" --dtype "${DTYPE}" --benchmark_desc "${name}_bs$BS" --host "${HOST}" -c "${COMPILER}" --verbose --skip_verification
 	      done
 	  done
 	done

@@ -145,6 +145,7 @@ class Backend:
         self.dtype = str_to_dtype(dtype)
 
     def to_device(self, x: torch.Tensor):
+        x = x.contiguous(memory_format=torch.channels_last)
         if self.device_name in ("cuda", "xpu"):
             return x.to(self.device)
         elif self.device_name == "cpu":
@@ -230,6 +231,7 @@ class Backend:
             # enable oneDNN graph fusion globally
             torch.jit.enable_onednn_fusion(True)
             compiled_model = torch.jit.trace(model, sample_input)
+
             compiled_model = torch.jit.freeze(compiled_model)
             print("Compiled with torchscript onednn")
         elif compile_mode == "ipex":

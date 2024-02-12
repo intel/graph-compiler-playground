@@ -194,6 +194,7 @@ def main():
                 / (10**12)
             )
         )
+        print("FPS: {:.1f}".format(results.get("samples_per_s", 0)))
         pprint.pprint(report)
 
     if args.output is not None:
