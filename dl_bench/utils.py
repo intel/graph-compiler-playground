@@ -395,14 +395,34 @@ class Benchmark:
         self.net.eval()
         with torch.no_grad():
             start = time.perf_counter()
-            for i, x in enumerate(test_loader):
-                backend.sync()
-                s = get_time()
-                x = backend.to_device(x)
-                if backend.dtype != torch.float32:
-                    with torch.autocast(
-                        device_type=backend.device_name,
-                        dtype=backend.dtype,
+            # Duration is inconsistent now
+            with tm.timeit("duration_s"):
+                for i, x in enumerate(test_loader):
+                    backend.sync()
+                    s = get_time()
+                    x = backend.to_device(x)
+                    if backend.dtype != torch.float32:
+                        with torch.autocast(
+                            device_type=backend.device_name,
+                            dtype=backend.dtype,
+                        ):
+                            y = self.net(x)
+                    else:
+                        y = self.net(x)
+
+                    if i < self.warmup_batches:
+                        start = time.perf_counter()
+                        continue
+
+                    backend.sync()
+                    fw_times.append(get_time() - s)
+                    n_items += len(x)
+                    outputs.append(y)
+
+                    # early stopping if we have 10+ batches and were running for 10+ seconds
+                    if (
+                        (time.perf_counter() - start) > self.min_seconds
+                        and n_items >= self.batch_size * self.min_batches
                     ):
                         y = self.net(x)
                 else:
