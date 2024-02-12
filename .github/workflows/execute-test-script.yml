@@ -30,11 +30,6 @@ on:
                 required: true
                 default: spr
                 type: string
-            shutdown_cloud_runner:
-                description: Whether to shutdown AWS cloud runner
-                required: false
-                default: false
-                type: boolean
             test_script:
                 description: Test script to run
                 required: false
@@ -57,7 +52,7 @@ jobs:
             runner_labels: ${{ steps.set_up_vars.outputs.runner_labels }}
             results_name: ${{ steps.set_up_vars.outputs.results_name }}
         steps:
-            - name: Get conda env and results name for AWS runners
+            - name: Get conda env and results name for cloud runners
               id: set_up_vars
               shell: bash -el {0}
               run: |
@@ -139,24 +134,19 @@ jobs:
                   fi
 
 
-            - name: Upload results.db to artifacts when running in AWS
-              if: contains(fromJSON(needs.set_up_vars.outputs.runner_labels), 'aws')
+            - name: Upload results.db to artifacts when running in the cloud
+              if: ${{ inputs.runner_type != 'spr' }}
               uses: actions/upload-artifact@v3
               with:
                   name: ${{ needs.set_up_vars.outputs.results_name }}
                   path: results.db
-
-            - name: Shutdown AWS cloud runner
-              if: contains(fromJSON(needs.set_up_vars.outputs.runner_labels), 'aws') && inputs.shutdown_cloud_runner
-              shell: bash -el {0}
-              run: sudo shutdown -h +2
 
     parse_results:
         runs-on: [self-hosted, glados, spr]
         needs:
             - set_up_vars
             - mlp_test
-        if: contains(fromJSON(needs.set_up_vars.outputs.runner_labels), 'aws')
+        if: ${{ inputs.runner_type != 'spr' }}
         steps:
             - uses: actions/checkout@v4
             - name: Download results.db from artifacts
@@ -170,7 +160,7 @@ jobs:
               run: |
                 ls -l
 
-                sudo apt update && sudo apt install sqlite3
+                sudo apt update && sudo apt install -y sqlite3
                 ./db_tools/export_sqlite2csv.sh
 
                 source ${CONDA}/bin/activate
