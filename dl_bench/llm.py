@@ -1,6 +1,7 @@
 import time
 
 import torch
+import intel_extension_for_pytorch as ipex
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from dl_bench.utils import TimerManager, Benchmark, str_to_dtype
@@ -12,7 +13,7 @@ def get_llm(name, dtype):
 
     model_name = "EleutherAI/gpt-j-6B"
 
-    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=dtype)
+    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=dtype, torchscript=True)
     tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
     return tokenizer, model
 
@@ -53,11 +54,11 @@ class LlmBenchmark(Benchmark):
 
         print("Warmup started")
         with torch.inference_mode(), tm.timeit("warmup_s"):
-            self.model.eval()
+            # self.model.eval()
             self.generate(self.warmup_prompt)
         print("Warmup done")
 
-        self.model.eval()
+        # self.model.eval()
         enabled = backend.dtype != torch.float32
         with torch.inference_mode(), torch.autocast(
             enabled=enabled, device_type=backend.device_name
