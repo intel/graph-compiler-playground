@@ -192,6 +192,7 @@ def main():
         )
     )
     pprint.pprint(report)
+    pprint.pprint(results)
 
     if args.output is not None:
         with open(args.output, "w", encoding="UTF-8") as out:
