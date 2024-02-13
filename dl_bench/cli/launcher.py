@@ -111,9 +111,6 @@ def parse_args():
         "-o", "--output", required=False, help="Path to output report file."
     )
     parser.add_argument(
-        "-v", "--verbose", required=False, action="store_true", help="Verbose mode."
-    )
-    parser.add_argument(
         "--skip_verification",
         required=False,
         action="store_true",
@@ -185,16 +182,17 @@ def main():
 
     db = BenchmarkDb(args.url)
 
-    if args.verbose:
-        print("Report:")
-        print(
-            "TFLOPS: {:.3}".format(
-                results.get("flops_per_sample", 0)
-                * results.get("samples_per_s", 0)
-                / (10**12)
-            )
+    print("Report:")
+    print("FPS: {:.1f}".format(results.get("samples_per_s", 0)))
+    print(
+        "TFLOPS: {:.3}".format(
+            results.get("flops_per_sample", 0)
+            * results.get("samples_per_s", 0)
+            / (10**12)
         )
-        pprint.pprint(report)
+    )
+    pprint.pprint(report)
+    pprint.pprint(results)
 
     if args.output is not None:
         with open(args.output, "w", encoding="UTF-8") as out:
