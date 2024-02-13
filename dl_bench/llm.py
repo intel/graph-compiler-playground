@@ -31,12 +31,15 @@ class LlmBenchmark(Benchmark):
             "num_beams": 4,
         }
 
-    def generate(self, prompt):
+    def generate(self, prompt, backend):
         input_ids = self.tokenizer(prompt, return_tensors="pt").input_ids
+        backend.sync()
         start = time.perf_counter()
+        input_ids = backend.to_device(input_ids)
         gen_tokens = self.model.generate(
             input_ids, **self.gen_kwargs, pad_token_id=self.tokenizer.eos_token_id
         )
+        backend.sync()
         total_time = time.perf_counter() - start
 
         # text = self.tokenizer.batch_decode(gen_tokens)[0]
@@ -54,7 +57,7 @@ class LlmBenchmark(Benchmark):
         print("Warmup started")
         with torch.inference_mode(), tm.timeit("warmup_s"):
             self.model.eval()
-            self.generate(self.warmup_prompt)
+            self.generate(self.warmup_prompt, backend)
         print("Warmup done")
 
         self.model.eval()
@@ -62,7 +65,7 @@ class LlmBenchmark(Benchmark):
         with torch.inference_mode(), torch.autocast(
             enabled=enabled, device_type=backend.device_name
         ), tm.timeit("duration_s"):
-            tokens, total_time = self.generate(self.prompt)
+            tokens, total_time = self.generate(self.prompt, backend)
         outputs = [tokens]
 
         results = tm.get_results()
