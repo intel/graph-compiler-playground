@@ -78,7 +78,6 @@ jobs:
             torch_mlir_repo: ${{ inputs.torch_mlir_repo }}
             torch_mlir_branch: ${{ inputs.torch_mlir_branch }}
             runner_type: ${{ inputs.runner_type }}
-            shutdown_cloud_runner: ${{ inputs.shutdown_cloud_runner }}
             test_script: ${{ matrix.test_script }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}

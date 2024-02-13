@@ -389,54 +389,61 @@ class Benchmark:
         self.compile(sample, backend)
 
         n_items = 0
-
-        self.net.eval()
         outputs = []
         fw_times = []
+
+        self.net.eval()
         with torch.no_grad():
             start = time.perf_counter()
-            # Duration is inconsistent now
-            with tm.timeit("duration_s"):
-                for i, x in enumerate(test_loader):
-                    backend.sync()
-                    s = get_time()
-                    x = backend.to_device(x)
-                    if backend.dtype != torch.float32:
-                        with torch.autocast(
-                            device_type=backend.device_name,
-                            dtype=backend.dtype,
-                        ):
-                            y = self.net(x)
-                    else:
-                        y = self.net(x)
-
-                    if i < self.warmup_batches:
-                        start = time.perf_counter()
-                        continue
-
-                    backend.sync()
-                    fw_times.append(get_time() - s)
-                    n_items += len(x)
-                    outputs.append(y)
-
-                    # early stopping if we have 10+ batches and were running for 10+ seconds
-                    if (
-                        (time.perf_counter() - start) > self.min_seconds
-                        and n_items >= self.batch_size * self.min_batches
+            for i, x in enumerate(test_loader):
+                backend.sync()
+                s = get_time()
+                x = backend.to_device(x)
+                if backend.dtype != torch.float32:
+                    with torch.autocast(
+                        device_type=backend.device_name,
+                        dtype=backend.dtype,
                     ):
-                        break
+                        y = self.net(x)
+                else:
+                    y = self.net(x)
 
-                    if (get_time() - start) > max_time:
-                        break
+                backend.sync()
+
+                if i < self.warmup_batches:
+                    # We restart timer because that was just a warmup
+                    start = time.perf_counter()
+                    continue
+
+                fw_times.append(get_time() - s)
+                n_items += len(x)
+                outputs.append(y)
+
+                # early stopping if we have 10+ batches and were running for 10+ seconds
+                if (
+                    (time.perf_counter() - start) > self.min_seconds
+                    and n_items >= self.batch_size * self.min_batches
+                ):
+                    break
+
+                if (get_time() - start) > max_time:
+                    break
+
+        stop = get_time()
 
         print(
             f"Latency 0%-5%-50%-95%-100% are: {np.percentile(fw_times, [0, 5, 50, 95, 100])}"
         )
 
         results = tm.get_results()
-        results["duration_s"] = get_time() - start
+        results["duration_s"] = stop - start
         results["samples_per_s"] = n_items / sum(fw_times)
+        results["dirty_items_per_s"] = n_items / results["duration_s"]
         results["flops_per_sample"] = self.flops_per_sample
+        results["n_items"] = n_items
+        results["p50"] = np.percentile(fw_times, 50)
+        results["p90"] = np.percentile(fw_times, 90)
+        results["p100"] = max(fw_times)
 
         return results, outputs
 
