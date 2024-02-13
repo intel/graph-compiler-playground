@@ -187,6 +187,7 @@ def main():
 
     if args.verbose:
         print("Report:")
+        print("FPS: {:.1f}".format(results.get("samples_per_s", 0)))
         print(
             "TFLOPS: {:.3}".format(
                 results.get("flops_per_sample", 0)
