@@ -116,7 +116,7 @@ jobs:
                       URL="--url ${{ secrets.DB_URL }}"
                   fi
 
-                  export DL_BENCH_ARGS="--host ${{ inputs.runner_type }} --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} -v ${URL}"
+                  export DL_BENCH_ARGS="--host ${{ inputs.runner_type }} --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} ${URL}"
 
                   # We mainly want to verify our own backend
                   if [[ ${{ inputs.compiler }} != *torch_mlir* ]]; then
