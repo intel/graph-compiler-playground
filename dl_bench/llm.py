@@ -13,7 +13,7 @@ def get_llm(name, dtype):
 
     model_name = "EleutherAI/gpt-j-6B"
 
-    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=dtype, torchscript=True)
+    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=dtype)
     tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
     return tokenizer, model
 
@@ -61,7 +61,7 @@ class LlmBenchmark(Benchmark):
             self.generate(self.warmup_prompt, backend)
         print("Warmup done")
 
-        # self.model.eval()
+        self.model.eval()
         enabled = backend.dtype != torch.float32
         with torch.inference_mode(), torch.autocast(
             enabled=enabled, device_type=backend.device_name
