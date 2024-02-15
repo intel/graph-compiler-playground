@@ -5,7 +5,8 @@ set -x
 HOST="test"
 
 export KMP_AFFINITY="respect,noreset,granularity=fine,balanced"
-export OMP_NUM_THREADS=32
+export OMP_NUM_THREADS=$(grep ^cpu\\scores /proc/cpuinfo | uniq |  awk '{print $4}')
+echo "Cores configured $OMP_NUM_THREADS"
 export ONEDNN_VERBOSE=0
 
 CNNS=(resnet50)
