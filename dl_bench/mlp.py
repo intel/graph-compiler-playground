@@ -89,8 +89,6 @@ class MlpBenchmark(Benchmark):
 
         name = params.get("name", "size5")
         net = get_mlp(n_chans_in=IN_FEAT, n_chans_out=N_CLASSES, name=name)
-        min_batches = int(params.get("min_batches", 10))
-        min_seconds = int(params.get("min_seconds", 10))
 
         super().__init__(
             net=net,
