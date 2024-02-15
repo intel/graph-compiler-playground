@@ -19,8 +19,23 @@ do
 	      for name in "${CNNS[@]}"
 	      do
 		  echo "Benchmark $name with BS=$BS and DTYPE=$DTYPE"
-		  numactl -N 1 benchmark-run -b cnn -p "name='${name}',batch_size='$BS'" --dtype "${DTYPE}" --benchmark_desc "${name}_bs$BS" --host "${HOST}" -c "${COMPILER}" --verbose --skip_verification
+		  numactl -N 1 benchmark-run -b cnn -p "name='${name}',batch_size='$BS'" --dtype "${DTYPE}" --benchmark_desc "${name}_bs$BS" --host "${HOST}" -c "${COMPILER}" --skip_verification
 	      done
 	  done
 	done
 done
+
+
+LLMS=(gptj)
+for COMPILER in dynamo ipex
+do
+	for DTYPE in float32 bfloat16
+	do
+		for name in "${LMMS[@]}"
+		do
+		echo "Benchmark $name with DTYPE=$DTYPE"
+		numactl -N 1 benchmark-run -b llm -p "name='${name}'" --dtype "${DTYPE}" --benchmark_desc "${name}_bs$BS" --host "${HOST}" -c "${COMPILER}" --skip_verification
+		done
+	done
+done
+
