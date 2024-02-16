@@ -4,7 +4,7 @@ import torch
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
-    LlamaForCasualLM,
+    LlamaForCausalLM,
     LlamaTokenizer,
 )
 
@@ -12,7 +12,7 @@ from dl_bench.utils import TimerManager, Benchmark, str_to_dtype
 
 
 def get_llm(name, dtype):
-    if name != "gptj":
+    if name == "gptj":
         model_name = "EleutherAI/gpt-j-6B"
 
         model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=dtype)
