@@ -1,19 +1,32 @@
 import time
 
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    LlamaForCasualLM,
+    LlamaTokenizer,
+)
 
 from dl_bench.utils import TimerManager, Benchmark, str_to_dtype
 
 
 def get_llm(name, dtype):
     if name != "gptj":
+        model_name = "EleutherAI/gpt-j-6B"
+
+        model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=dtype)
+        tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
+    elif name == "llama2":
+
+        model_name = "meta-llama/Llama-2-7b-chat-hf"
+        model_name = "meta-llama/Llama-2-13b-chat-hf"
+        model = LlamaForCasualLM.from_pretrained(
+            model_name, torch_dtype=dtype, low_cpu_mem_usage=True
+        )
+        tokenizer = LlamaTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
+    else:
         raise ValueError("Unsupported model name")
-
-    model_name = "EleutherAI/gpt-j-6B"
-
-    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=dtype)
-    tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
     return tokenizer, model
 
 
