@@ -131,11 +131,13 @@ jobs:
                   # HOST CONFIG
                   export KMP_AFFINITY=respect,noreset,granularity=fine,balanced
                   # This parameter is incredibly important once we use numactl to pick one socket, performance difference was 10x for resnet50 bs=1 torch-inductor
-                  export OMP_NUM_THREADS=32
+                  export OMP_NUM_THREADS=$(grep ^cpu\\scores /proc/cpuinfo | uniq | awk '{print $4}')
+                  echo "CPU cores configured: $OMP_NUM_THREADS"
                   if [[ ${LABELS} = *glados* ]]; then
                       export HF_HOME="/data/graph_compiler/huggingface_cache"
                       numactl -N 1 ${{ inputs.test_script }}
                   else
+                      export HF_HOME="/data/graph_compiler/huggingface_cache"
                       source ${{ inputs.test_script}}
                   fi
 
