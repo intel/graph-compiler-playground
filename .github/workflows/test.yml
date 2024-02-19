@@ -56,7 +56,6 @@ jobs:
             torch_mlir_repo: ${{ github.event_name == 'workflow_dispatch' && inputs.torch_mlir_repo || 'intel-ai/torch-mlir' }}
             torch_mlir_branch: ${{ github.event_name == 'workflow_dispatch' && inputs.torch_mlir_branch || 'cpu-proto' }}
             runner_type: spr
-            shutdown_cloud_runner: false
             test_script: ${{ matrix.test_script }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}
