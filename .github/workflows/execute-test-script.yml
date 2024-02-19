@@ -38,6 +38,9 @@ on:
         secrets:
             DB_URL:
                 required: true
+            HF_TOKEN:
+                required: true
+
 
 jobs:
     print_inputs:
@@ -117,6 +120,8 @@ jobs:
                   fi
 
                   export DL_BENCH_ARGS="--host ${{ inputs.runner_type }} --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} ${URL}"
+                  # We need token to load llama2 from huggingface repo, which is closed
+                  export HF_TOKEN="${{ secrets.HF_TOKEN }}"
 
                   # We mainly want to verify our own backend
                   if [[ ${{ inputs.compiler }} != *torch_mlir* ]]; then

@@ -1,3 +1,4 @@
+import os
 import time
 
 import torch
@@ -12,19 +13,22 @@ from dl_bench.utils import TimerManager, Benchmark, str_to_dtype
 
 
 def get_llm(name, dtype):
+
     if name == "gptj":
         model_name = "EleutherAI/gpt-j-6B"
 
         model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=dtype)
         tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
-    elif name == "llama2":
+    elif name == "llama2-13b":
+        kwargs = {}
+        if "HF_TOKEN" in os.environ:
+            kwargs["token"] = os.environ.get("HF_TOKEN")
 
-        model_name = "meta-llama/Llama-2-7b-chat-hf"
-        model_name = "meta-llama/Llama-2-13b-chat-hf"
-        model = LlamaForCasualLM.from_pretrained(
-            model_name, torch_dtype=dtype, low_cpu_mem_usage=True
+        model_name = "meta-llama/Llama-2-13b-hf"
+        model = LlamaForCausalLM.from_pretrained(
+            model_name, torch_dtype=dtype, **kwargs
         )
-        tokenizer = LlamaTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
+        tokenizer = LlamaTokenizer.from_pretrained(model_name, **kwargs)
     else:
         raise ValueError("Unsupported model name")
     return tokenizer, model
