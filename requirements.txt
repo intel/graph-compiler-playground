@@ -6,3 +6,4 @@ transformers
 # For DB operations
 mysql-connector-python
 pandas
+sentencepiece
