@@ -55,8 +55,8 @@ jobs:
             fail-fast: false
         uses: ./.github/workflows/execute-test-script.yml
         with:
-            compiler: ${{ matrix.type.compiler }}
-            device: ${{ matrix.type.device }}
+            compiler: ${{ matrix.compiler }}
+            device: cpu
             tag: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'ci' }}
             torch_mlir_repo: ${{ github.event_name == 'workflow_dispatch' && inputs.torch_mlir_repo || 'intel-ai/torch-mlir' }}
             torch_mlir_branch: ${{ github.event_name == 'workflow_dispatch' && inputs.torch_mlir_branch || 'cpu-proto' }}
