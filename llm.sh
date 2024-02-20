@@ -9,7 +9,7 @@ if [[ -z "${DL_BENCH_ARGS}" ]]; then
   exit 1
 fi
 
-for NAME in gptj llama2-13b
+for NAME in llama2-13b gptj
 do
   for DTYPE in float32 bfloat16
   do
