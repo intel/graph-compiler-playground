@@ -137,7 +137,7 @@ jobs:
                       export HF_HOME="/data/graph_compiler/huggingface_cache"
                       numactl -N 1 ${{ inputs.test_script }}
                   else
-                      export HF_HOME="/data/graph_compiler/huggingface_cache"
+                      # export HF_HOME="/data/graph_compiler/huggingface_cache"
                       source ${{ inputs.test_script}}
                   fi
 
