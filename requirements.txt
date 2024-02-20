@@ -7,3 +7,4 @@ transformers
 mysql-connector-python
 pandas
 sentencepiece
+protobuf
