@@ -81,6 +81,7 @@ jobs:
             test_script: ${{ matrix.test_script }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}
+            HF_TOKEN: ${{ secrets.HF_TOKEN }}
 
     shutdown:
         needs: mlp_test

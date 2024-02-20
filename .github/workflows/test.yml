@@ -35,28 +35,33 @@ jobs:
     mlp_test:
         strategy:
             matrix:
-                type: [
-                  {device: 'cpu', compiler: 'torch'},
-                  {device: 'cpu', compiler: 'dynamo'},
-                  {device: 'cpu', compiler: 'torchscript'},
-                  {device: 'cpu', compiler: 'torchscript_onednn'},
-                  {device: 'cpu', compiler: 'ipex'},
-                  {device: 'cpu', compiler: 'ipex_onednn_graph'},
-#                  {device: 'xpu', compiler: 'ipex'},
-                  {device: 'cpu', compiler: 'torch_mlir'},
-                  {device: 'cpu', compiler: 'torch_mlir_xsmm'}
-                ]
+                compiler:
+                    - torch
+                    - dynamo
+                    - torchscript
+                    - torchscript_onednn
+                    - ipex
+                    - ipex_onednn_graph
+                    - torch_mlir
+                    - torch_mlir_xsmm
                 test_script: ${{ github.event_name == 'workflow_dispatch' && fromJson(inputs.test_scripts) || fromJson('["./mlp.sh", "./cnn.sh", "./llm.sh"]') }}
+                exclude:
+                    - test_script: "./llm.sh"
+                      compiler: torchscript
+                    - test_script: "./llm.sh"
+                      compiler: torchscript_onednn
+                    - test_script: "./llm.sh"
+                      compiler: ipex_onednn_graph
             fail-fast: false
         uses: ./.github/workflows/execute-test-script.yml
         with:
-            compiler: ${{ matrix.type.compiler }}
-            device: ${{ matrix.type.device }}
+            compiler: ${{ matrix.compiler }}
+            device: cpu
             tag: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || 'ci' }}
             torch_mlir_repo: ${{ github.event_name == 'workflow_dispatch' && inputs.torch_mlir_repo || 'intel-ai/torch-mlir' }}
             torch_mlir_branch: ${{ github.event_name == 'workflow_dispatch' && inputs.torch_mlir_branch || 'cpu-proto' }}
             runner_type: spr
-            shutdown_cloud_runner: false
             test_script: ${{ matrix.test_script }}
         secrets:
             DB_URL: ${{ secrets.DB_URL }}
+            HF_TOKEN: ${{ secrets.HF_TOKEN }}
