@@ -84,6 +84,7 @@ class LlmBenchmark(Benchmark):
 
         self.model.eval()
         for i in range(self.n_iter):
+            print(f"Epoch {i+1}/{self.n_iter}")
             cast = torch.autocast(enabled=enabled, device_type=backend.device_name)
             with torch.inference_mode(), cast:
                 tokens, total_time = self.generate(backend)
