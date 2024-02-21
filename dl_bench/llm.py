@@ -40,8 +40,8 @@ class LlmBenchmark(Benchmark):
         name = params.get("name", "gptj")
         dtype = params.get("dtype")
         self.batch_size = params.get("batch_size", 1)
-        self.n_iter = params.get("n_iter", 6)
-        self.warmup_batches = params.get("warmup", 3)
+        self.n_iter = params.get("n_iter", 5)
+        self.warmup_batches = params.get("warmup", 2)
 
         self.tokenizer, self.model = get_llm(name, dtype=str_to_dtype(dtype))
         prompt = "Here is a story about a person that find out he was adopted: one day little Timmy was looking through old"
@@ -94,6 +94,7 @@ class LlmBenchmark(Benchmark):
                 start = get_time()
                 continue
 
+            print(f"Fw time: {total_time:.1f}")
             fw_times.append(total_time)
             n_items += math.prod(tokens.shape)
             outputs.append(tokens)
