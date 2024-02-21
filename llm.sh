@@ -11,8 +11,14 @@ fi
 
 for NAME in llama2-13b gptj
 do
-  for DTYPE in float32 bfloat16
+  for BS in 1 4
   do
-    benchmark-run -b llm -p "name='${NAME}'" --benchmark_desc "${NAME}" --dtype "${DTYPE}" ${DL_BENCH_ARGS} || echo Failed
+    for DTYPE in float32 bfloat16
+    do
+      echo "Benchmark $NAME"
+      echo "Batch size $BS"
+      BS_TXT=$(printf "%04d" $BS)
+      benchmark-run -b llm -p "name='${NAME}',batch_size=${BS}" --benchmark_desc "${NAME}_bs${BS_TXT}" --dtype "${DTYPE}" ${DL_BENCH_ARGS} || echo Failed
+    done
   done
 done
