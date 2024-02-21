@@ -1,7 +1,4 @@
-import abc
-import copy
 import time
-from time import perf_counter
 from typing import Any
 
 import numpy as np
@@ -91,31 +88,6 @@ def refine_result_type(_result):
         raise ValueError(f"Unhandled return type {type(_result)}")
 
 
-class TimerManager:
-    def __init__(self):
-        self.name2time = {}
-        self.name = None
-
-    def timeit(self, name):
-        self.name = name
-        return self
-
-    def __enter__(self):
-        self.start = perf_counter()
-        return self
-
-    def __exit__(self, type, value, traceback):
-        assert self.start is not None and self.name is not None
-        self.time = perf_counter() - self.start
-        self.readout = f"Time: {self.time:.3f} seconds"
-        self.name2time[self.name] = perf_counter() - self.start
-        self.start = None
-        self.name = None
-
-    def get_results(self):
-        return self.name2time
-
-
 def str_to_dtype(dtype: str):
     if dtype == "float32":
         return torch.float32
@@ -153,7 +125,7 @@ class Backend:
             raise ValueError("Unknown device")
 
     def sync(self):
-        if self.device_name == 'cuda':
+        if self.device_name == "cuda":
             torch.cuda.synchronize()
 
     def prepare_eval_transformer(self, model):
@@ -299,7 +271,11 @@ class Backend:
                 opts,
                 output_type="linalg-on-tensors",
             )
-            backend = CpuProtoLinalgOnTensorsBackend(opts) if compile_mode == "torch_mlir" else XsmmProtoLinalgOnTensorsBackend(opts)
+            backend = (
+                CpuProtoLinalgOnTensorsBackend(opts)
+                if compile_mode == "torch_mlir"
+                else XsmmProtoLinalgOnTensorsBackend(opts)
+            )
             # backend = RefBackendLinalgOnTensorsBackend()
             module = backend.compile(module)
             backend_module = backend.load(module)
@@ -345,11 +321,32 @@ class Backend:
             raise ValueError(f"Unknown execution device {device_name}.")
 
 
+def get_report(fw_times, duration_s, n_items, flops_per_sample):
+    return {
+        "duration_s": duration_s,
+        "samples_per_s": n_items / sum(fw_times),
+        "dirty_items_per_s": n_items / duration_s,
+        "flops_per_sample": flops_per_sample,
+        "n_items": n_items,
+        "p0": np.percentile(fw_times, 0),
+        "p50": np.percentile(fw_times, 50),
+        "p90": np.percentile(fw_times, 90),
+        "p100": max(fw_times),
+    }
+
+
 class Benchmark:
     def __init__(
-        self, net, in_shape, dataset, batch_size, min_batches=10, min_seconds=10, warmup_batches=3,
+        self,
+        net,
+        in_shape,
+        dataset,
+        batch_size,
+        min_batches=10,
+        min_seconds=10,
+        warmup_batches=3,
     ) -> None:
-        self.net = net
+        self.model = net
         self.in_shape = in_shape
         self.dataset = dataset
         self.batch_size = batch_size
@@ -358,7 +355,7 @@ class Benchmark:
         self.min_seconds = min_seconds
 
     def compile(self, sample, backend: Backend):
-        self.net = backend.prepare_eval_model(self.net, sample_input=sample)
+        self.model = backend.prepare_eval_model(self.model, sample_input=sample)
 
     def inference(self, backend: Backend):
         # timout if running for more than 3 minutes already
@@ -372,14 +369,12 @@ class Benchmark:
             pin_memory=backend.device_name == "cuda",
         )
 
-        tm = TimerManager()
-
         try:
             print("Torch cpu capability:", torch.backends.cpu.get_cpu_capability())
         except:
             pass
 
-        self.flops_per_sample = get_macs(self.net, self.in_shape, backend) * 2
+        flops_per_sample = get_macs(self.model, self.in_shape, backend) * 2
 
         sample = next(iter(test_loader))
         self.compile(sample, backend)
@@ -388,9 +383,9 @@ class Benchmark:
         outputs = []
         fw_times = []
 
-        self.net.eval()
-        with torch.no_grad():
-            start = time.perf_counter()
+        self.model.eval()
+        with torch.inference_mode():
+            start = get_time()
             for i, x in enumerate(test_loader):
                 backend.sync()
                 s = get_time()
@@ -400,9 +395,9 @@ class Benchmark:
                         device_type=backend.device_name,
                         dtype=backend.dtype,
                     ):
-                        y = self.net(x)
+                        y = self.model(x)
                 else:
-                    y = self.net(x)
+                    y = self.model(x)
 
                 backend.sync()
 
@@ -427,21 +422,13 @@ class Benchmark:
 
         stop = get_time()
 
-        print(
-            f"Latency 0%-5%-50%-95%-100% are: {np.percentile(fw_times, [0, 5, 50, 95, 100])}"
+        report = get_report(
+            fw_times=fw_times,
+            duration_s=stop - start,
+            n_items=n_items,
+            flops_per_sample=flops_per_sample,
         )
-
-        results = tm.get_results()
-        results["duration_s"] = stop - start
-        results["samples_per_s"] = n_items / sum(fw_times)
-        results["dirty_items_per_s"] = n_items / results["duration_s"]
-        results["flops_per_sample"] = self.flops_per_sample
-        results["n_items"] = n_items
-        results["p50"] = np.percentile(fw_times, 50)
-        results["p90"] = np.percentile(fw_times, 90)
-        results["p100"] = max(fw_times)
-
-        return results, outputs
+        return report, outputs
 
     def train(self):
         # We are not interested in training yet.
