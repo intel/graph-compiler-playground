@@ -3,6 +3,7 @@ channels:
   - intel
   - conda-forge
 dependencies:
+  - python=3.11
   - datasets
   - accelerate
   - sentencepiece
@@ -10,10 +11,12 @@ dependencies:
   - sqlalchemy>=2.0.0
   - pytest
   - pip
-    - --index-url https://download.pytorch.org/whl/cpu
+  - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cpu
     - torch
     - torchvision
     - torchaudio
+    - transformers==4.35.2
     - intel-extension-for-pytorch
     - --extra-index-url https://pytorch-extension.intel.com/release-whl/stable/cpu/us/
     - oneccl_bind_pt
