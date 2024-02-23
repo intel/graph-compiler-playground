@@ -25,7 +25,7 @@ def get_llm(name, dtype):
         raise ValueError("Unsupported model name")
 
     kwargs = {}
-    if name.startwith("llama2") and "HF_TOKEN" in os.environ:
+    if name.startswith("llama2") and "HF_TOKEN" in os.environ:
         kwargs = {"HF_TOKEN": os.environ.get("HF_TOKEN")}
 
     model_name, M, T = name2params[name]
@@ -39,7 +39,7 @@ class LlmBenchmark(Benchmark):
     def __init__(self, params) -> None:
         name = params.get("name", "gptj")
         dtype = params.get("dtype")
-        self.batch_size = params.get("batch_size", 1)
+        self.batch_size = int(params.get("batch_size", 1))
         self.n_iter = params.get("n_iter", 5)
         self.warmup_batches = params.get("warmup", 2)
 
@@ -89,12 +89,13 @@ class LlmBenchmark(Benchmark):
             with torch.inference_mode(), cast:
                 tokens, total_time = self.generate(backend)
 
+            print(f"Fw time: {total_time:.1f")
+
             if i < self.warmup_batches:
                 # We restart timer because that was just a warmup
                 start = get_time()
                 continue
 
-            print(f"Fw time: {total_time:.1f}")
             fw_times.append(total_time)
             n_items += math.prod(tokens.shape)
             outputs.append(tokens)
