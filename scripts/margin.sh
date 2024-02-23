@@ -29,7 +29,7 @@ do
 
 
 	LLMS=(gptj llama2-7b)
-	for COMPILER in dynamo ipex
+	for COMPILER in ipex
 	do
 		for BS in 0001 0004 0008
 		do
