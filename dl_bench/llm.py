@@ -1,20 +1,38 @@
+import os
 import time
+import math
 
 import torch
 import intel_extension_for_pytorch as ipex
-from transformers import AutoModelForCausalLM, AutoTokenizer
+import numpy as np
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    LlamaForCausalLM,
+    LlamaTokenizer,
+)
 
-from dl_bench.utils import TimerManager, Benchmark, str_to_dtype
+from dl_bench.utils import Benchmark, get_report, get_time, str_to_dtype
 
 
 def get_llm(name, dtype):
-    if name != "gptj":
+    if name == "gptj":
+        model_name = "EleutherAI/gpt-j-6B"
+
+        model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=dtype)
+        tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
+    elif name == "llama2-13b":
+        kwargs = {}
+        if "HF_TOKEN" in os.environ:
+            kwargs["token"] = os.environ.get("HF_TOKEN")
+
+        model_name = "meta-llama/Llama-2-13b-hf"
+        model = LlamaForCausalLM.from_pretrained(
+            model_name, torch_dtype=dtype, **kwargs
+        )
+        tokenizer = LlamaTokenizer.from_pretrained(model_name, **kwargs)
+    else:
         raise ValueError("Unsupported model name")
-
-    model_name = "EleutherAI/gpt-j-6B"
-
-    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=dtype)
-    tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
     return tokenizer, model
 
 
@@ -22,9 +40,13 @@ class LlmBenchmark(Benchmark):
     def __init__(self, params) -> None:
         name = params.get("name", "gptj")
         dtype = params.get("dtype")
+        self.batch_size = params.get("batch_size", 1)
+        self.n_iter = params.get("n_iter", 5)
+        self.warmup_batches = params.get("warmup", 2)
+
         self.tokenizer, self.model = get_llm(name, dtype=str_to_dtype(dtype))
-        self.warmup_prompt = "There are several ways to travel, but my favourite is"
-        self.prompt = "Here is a story about a person that find out he was adopted: one day little Timmy was looking through old"
+        prompt = "Here is a story about a person that find out he was adopted: one day little Timmy was looking through old"
+        self.prompt = [prompt] * self.batch_size
         self.gen_kwargs = {
             "early_stopping": True,
             "max_new_tokens": 128,
@@ -32,45 +54,58 @@ class LlmBenchmark(Benchmark):
             "num_beams": 4,
         }
 
-    def generate(self, prompt, backend):
-        input_ids = self.tokenizer(prompt, return_tensors="pt").input_ids
+    def generate(self, backend):
         backend.sync()
         start = time.perf_counter()
-        input_ids = backend.to_device(input_ids)
+        input_tokens = self.tokenizer(self.prompt, return_tensors="pt").input_ids
+        input_tokens = backend.to_device(input_tokens)
         gen_tokens = self.model.generate(
-            input_ids, **self.gen_kwargs, pad_token_id=self.tokenizer.eos_token_id
+            input_tokens, **self.gen_kwargs, pad_token_id=self.tokenizer.eos_token_id
         )
         backend.sync()
+        text = self.tokenizer.batch_decode(gen_tokens)[0]
         total_time = time.perf_counter() - start
 
-        # text = self.tokenizer.batch_decode(gen_tokens)[0]
-        return gen_tokens[0], total_time
+        # new tokens are a subset of all tokens
+        output_tokens = gen_tokens[:, input_tokens.shape[1] :]
+        return output_tokens, total_time
 
     def inference(self, backend):
-        tm = TimerManager()
-
-        # Recover MACs computation
+        # TODO: Recover MACs computation
         # generate requires several forward passes, so need addtional algo to estimate
         # self.flops_per_sample = get_macs(self.model, self.in_shape, backend) * 2
-
         self.model = backend.prepare_eval_transformer(self.model)
-
-        print("Warmup started")
-        with torch.inference_mode(), tm.timeit("warmup_s"):
-            self.model.eval()
-            self.generate(self.warmup_prompt, backend)
-        print("Warmup done")
 
         self.model.eval()
         enabled = backend.dtype != torch.float32
-        with torch.inference_mode(), torch.autocast(
-            enabled=enabled, device_type=backend.device_name
-        ), tm.timeit("duration_s"):
-            tokens, total_time = self.generate(self.prompt, backend)
-        outputs = [tokens]
 
-        results = tm.get_results()
-        results["samples_per_s"] = len(tokens) / total_time
-        results["flops_per_sample"] = 1
+        n_items = 0
+        outputs = []
+        fw_times = []
 
-        return results, outputs
+        self.model.eval()
+        for i in range(self.n_iter):
+            print(f"Epoch {i+1}/{self.n_iter}")
+            cast = torch.autocast(enabled=enabled, device_type=backend.device_name)
+            with torch.inference_mode(), cast:
+                tokens, total_time = self.generate(backend)
+
+            if i < self.warmup_batches:
+                # We restart timer because that was just a warmup
+                start = get_time()
+                continue
+
+            print(f"Fw time: {total_time:.1f}")
+            fw_times.append(total_time)
+            n_items += math.prod(tokens.shape)
+            outputs.append(tokens)
+
+        stop = get_time()
+
+        report = get_report(
+            fw_times=fw_times,
+            duration_s=stop - start,
+            n_items=n_items,
+            flops_per_sample=1,
+        )
+        return report, outputs

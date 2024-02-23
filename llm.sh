@@ -9,7 +9,16 @@ if [[ -z "${DL_BENCH_ARGS}" ]]; then
   exit 1
 fi
 
-for DTYPE in float32 bfloat16
+for NAME in llama2-13b gptj
 do
-  benchmark-run -b llm -p "" --benchmark_desc "gptj" --dtype "${DTYPE}" ${DL_BENCH_ARGS} || echo Failed
+  for BS in 1 4
+  do
+    for DTYPE in float32 bfloat16
+    do
+      echo "Benchmark $NAME"
+      echo "Batch size $BS"
+      BS_TXT=$(printf "%04d" $BS)
+      benchmark-run -b llm -p "name='${NAME}',batch_size=${BS}" --benchmark_desc "${NAME}_bs${BS_TXT}" --dtype "${DTYPE}" ${DL_BENCH_ARGS} || echo Failed
+    done
+  done
 done

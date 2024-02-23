@@ -1,11 +1,24 @@
 CREATE OR REPLACE VIEW torchmlir_benchmark_view AS
 SELECT
     id,
-    REPLACE(REPLACE(CONCAT(host, '-', compiler, '-', dtype, '-', tag), 'torchscript', 'ts'), '-ci', '') AS backend,
+    REPLACE(
+        REPLACE(
+        REPLACE(
+        REPLACE(
+        REPLACE(
+        REPLACE(
+            CONCAT(host, '-', compiler, '-', dtype, '-', tag),
+        'torchscript', 'ts'),
+        '-ci', ''),
+        'ts_onednn', 'onednn'),
+        'ipex_onednn_graph', 'ipex_gc'),
+        'bfloat16', 'b16'),
+        'float32', 'f32'
+    ) AS backend,
     host,
     device,
     compiler,
-    dtype,
+    REPLACE(REPLACE(dtype, 'bfloat16', 'b16'), 'float32', 'f32') AS dtype,
     tag,
     benchmark,
     benchmark_desc,
