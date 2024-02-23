@@ -9,7 +9,7 @@ if [[ -z "${DL_BENCH_ARGS}" ]]; then
   exit 1
 fi
 
-for NAME in llama2-13b gptj
+for NAME in llama2-7b llama2-13b gptj
 do
   for BS in 1 4
   do
