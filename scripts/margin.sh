@@ -31,7 +31,7 @@ do
 	LLMS=(gptj llama2-7b)
 	for COMPILER in ipex
 	do
-		for BS in 0001 0004 0008
+		for BS in 1 4 8
 		do
 			for DTYPE in bfloat16
 			do

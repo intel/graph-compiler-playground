@@ -26,7 +26,7 @@ def get_llm(name, dtype):
 
     kwargs = {}
     if name.startswith("llama2") and "HF_TOKEN" in os.environ:
-        kwargs = {"HF_TOKEN": os.environ.get("HF_TOKEN")}
+        kwargs = {"token": os.environ.get("HF_TOKEN")}
 
     model_name, M, T = name2params[name]
 
