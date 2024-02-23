@@ -16,6 +16,7 @@ conda activate margin
 # Install ipex & pytorch
 python -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 python -m pip install intel-extension-for-pytorch
+python -m pip install transformers==4.35.2
 python -m pip install oneccl_bind_pt --extra-index-url https://pytorch-extension.intel.com/release-whl/stable/cpu/us/
 
 # Install benchmarks

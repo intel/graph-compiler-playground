@@ -12,11 +12,11 @@ export ONEDNN_VERBOSE=0
 for i in 1 2 3 4 5 6 7
 do
 	CNNS=(resnet50)
-	for COMPILER in dynamo ipex_onednn_graph
+	for COMPILER in ipex_onednn_graph
 	do
-		for DTYPE in float32 bfloat16
+		for DTYPE in bfloat16
 		do
-		for BS in 0001 0032 0128
+		for BS in 0001 0016 0032 0064 0128
 		do
 			for name in "${CNNS[@]}"
 			do
@@ -28,15 +28,18 @@ do
 	done
 
 
-	LLMS=(gptj)
+	LLMS=(gptj llama2-7b)
 	for COMPILER in dynamo ipex
 	do
-		for DTYPE in float32 bfloat16
+		for BS in 0001 0004 0008
 		do
-			for name in "${LLMS[@]}"
+			for DTYPE in bfloat16
 			do
-				echo "Benchmark $name with DTYPE=$DTYPE"
-				numactl -N 1 benchmark-run -b llm -p "name='${name}'" --dtype "${DTYPE}" --benchmark_desc "${name}_bs$BS" --host "${HOST}" -c "${COMPILER}" --skip_verification
+				for name in "${LLMS[@]}"
+				do
+					echo "Benchmark $name with DTYPE=$DTYPE"
+					numactl -N 1 benchmark-run -b llm -p "name='${name}',batch_size=${BS}" --dtype "${DTYPE}" --benchmark_desc "${name}_bs$BS" --host "${HOST}" -c "${COMPILER}" --skip_verification
+				done
 			done
 		done
 	done
