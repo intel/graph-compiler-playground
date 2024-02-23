@@ -89,7 +89,7 @@ class LlmBenchmark(Benchmark):
             with torch.inference_mode(), cast:
                 tokens, total_time = self.generate(backend)
 
-            print(f"Fw time: {total_time:.1f")
+            print(f"Fw time: {total_time:.1f}")
 
             if i < self.warmup_batches:
                 # We restart timer because that was just a warmup
