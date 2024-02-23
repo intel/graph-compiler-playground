@@ -132,7 +132,7 @@ class Backend:
         model = model.to(memory_format=torch.channels_last)
 
         model.to(self.device)
-        with torch.inference_mode():
+        with torch.no_grad():
             model.eval()
             return self._compile_transformer_model(
                 self.compile_mode, model, dtype=self.dtype
