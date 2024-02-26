@@ -3,12 +3,20 @@ channels:
   - intel
   - conda-forge
 dependencies:
-  - intel-aikit-pytorch
-  - pytorch>=2.0.1=*_xpu_*
-  - intel-extension-for-pytorch
+  - python=3.11
   - datasets
   - accelerate
   - sentencepiece
 # The following packages are required to run benchmarks
   - sqlalchemy>=2.0.0
   - pytest
+  - pip
+  - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cpu
+    - torch
+    - torchvision
+    - torchaudio
+    - transformers==4.35.2
+    - intel-extension-for-pytorch
+    - --extra-index-url https://pytorch-extension.intel.com/release-whl/stable/cpu/us/
+    - oneccl_bind_pt
