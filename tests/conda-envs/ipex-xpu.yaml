@@ -1,0 +1,14 @@
+name: ipex
+channels:
+  - intel
+  - conda-forge
+dependencies:
+  - intel-aikit-pytorch
+  - pytorch>=2.0.1=*_xpu_*
+  - intel-extension-for-pytorch
+  - datasets
+  - accelerate
+  - sentencepiece
+# The following packages are required to run benchmarks
+  - sqlalchemy>=2.0.0
+  - pytest

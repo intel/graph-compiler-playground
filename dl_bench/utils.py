@@ -132,7 +132,7 @@ class Backend:
         model = model.to(memory_format=torch.channels_last)
 
         model.to(self.device)
-        with torch.inference_mode():
+        with torch.no_grad():
             model.eval()
             return self._compile_transformer_model(
                 self.compile_mode, model, dtype=self.dtype
@@ -160,7 +160,9 @@ class Backend:
             import intel_extension_for_pytorch as ipex
 
             params = {} if dtype != torch.bfloat16 else {"dtype": torch.bfloat16}
-            compiled_model = ipex.optimize_transformers(model, **params)
+            #compiled_model = ipex.llm.optimize(model, **params, inplace=True, deployment_mode=True)
+            compiled_model = ipex.llm.optimize(model, **params)
+            # compiled_model = ipex.optimize_transformers(model, **params)
             print("Compiled with ipex")
         elif compile_mode == "ipex_onednn_graph":
             raise NotImplementedError()

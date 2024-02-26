@@ -26,7 +26,7 @@ def get_llm(name, dtype):
 
     kwargs = {}
     if name.startswith("llama2") and "HF_TOKEN" in os.environ:
-        kwargs = {"HF_TOKEN": os.environ.get("HF_TOKEN")}
+        kwargs = {"token": os.environ.get("HF_TOKEN")}
 
     model_name, M, T = name2params[name]
 
@@ -75,14 +75,15 @@ class LlmBenchmark(Benchmark):
         # self.flops_per_sample = get_macs(self.model, self.in_shape, backend) * 2
         self.model = backend.prepare_eval_transformer(self.model)
 
-        self.model.eval()
         enabled = backend.dtype != torch.float32
 
         n_items = 0
         outputs = []
         fw_times = []
 
-        self.model.eval()
+
+        # Ipex gives error with eval, other backends have no effect
+        # self.model.eval()
         for i in range(self.n_iter):
             print(f"Epoch {i+1}/{self.n_iter}")
             cast = torch.autocast(enabled=enabled, device_type=backend.device_name)
