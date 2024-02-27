@@ -14,14 +14,14 @@ do
 	CNNS=(resnet50)
 	for COMPILER in ipex_onednn_graph
 	do
-		for DTYPE in bfloat16
+		for DTYPE in float32 bfloat16
 		do
-		for BS in 0001 0016 0032 0064 0128
+		for BS in 0001 0032 
 		do
 			for name in "${CNNS[@]}"
 			do
 				echo "Benchmark $name with BS=$BS and DTYPE=$DTYPE"
-				numactl -N 1 benchmark-run -b cnn -p "name='${name}',batch_size='$BS'" --dtype "${DTYPE}" --benchmark_desc "${name}_bs$BS" --host "${HOST}" -c "${COMPILER}" --skip_verification
+				numactl -m 0 --physcpubind=0-31 benchmark-run -b cnn -p "name='${name}',batch_size='$BS'" --dtype "${DTYPE}" --benchmark_desc "${name}_bs$BS" --host "${HOST}" -c "${COMPILER}" --skip_verification
 			done
 		done
 		done
@@ -31,14 +31,14 @@ do
 	LLMS=(gptj llama2-7b)
 	for COMPILER in ipex
 	do
-		for BS in 1 4 8
+		for BS in 1 8
 		do
 			for DTYPE in bfloat16
 			do
 				for name in "${LLMS[@]}"
 				do
 					echo "Benchmark $name with DTYPE=$DTYPE"
-					numactl -N 1 benchmark-run -b llm -p "name='${name}',batch_size=${BS}" --dtype "${DTYPE}" --benchmark_desc "${name}_bs$BS" --host "${HOST}" -c "${COMPILER}" --skip_verification
+					numactl -m 0 --physcpubind=0-31 benchmark-run -b llm -p "name='${name}',batch_size=${BS}" --dtype "${DTYPE}" --benchmark_desc "${name}_bs$BS" --host "${HOST}" -c "${COMPILER}" --skip_verification
 				done
 			done
 		done
