@@ -22,6 +22,7 @@ do
 			do
 				echo "Benchmark $name with BS=$BS and DTYPE=$DTYPE"
 				export BENCH_COMMAND="benchmark-run -b cnn -p name='${name}',batch_size='$BS' --dtype ${DTYPE} --benchmark_desc ${name}_bs${BS}each4 --host ${HOST} -c ${COMPILER} --skip_verification"
+				numactl -m 0 --physcpubind=0-3 $BENCH_COMMAND &
 				numactl -m 0 --physcpubind=4-7 $BENCH_COMMAND &
 				numactl -m 0 --physcpubind=8-11 $BENCH_COMMAND &
 				numactl -m 0 --physcpubind=12-15 $BENCH_COMMAND &
@@ -29,6 +30,12 @@ do
 				numactl -m 0 --physcpubind=20-23 $BENCH_COMMAND &
 				numactl -m 0 --physcpubind=24-27 $BENCH_COMMAND &
 				numactl -m 0 --physcpubind=28-31 $BENCH_COMMAND &
+				numactl -m 0 --physcpubind=32-35 $BENCH_COMMAND &
+				numactl -m 0 --physcpubind=36-39 $BENCH_COMMAND &
+				numactl -m 0 --physcpubind=40-43 $BENCH_COMMAND &
+				numactl -m 0 --physcpubind=44-47 $BENCH_COMMAND &
+				numactl -m 0 --physcpubind=48-51 $BENCH_COMMAND &
+				numactl -m 0 --physcpubind=52-55 $BENCH_COMMAND &
 				wait $(jobs -p)
 			done
 		done
@@ -47,6 +54,7 @@ do
 				do
 					echo "Benchmark $name with DTYPE=$DTYPE"
 					export BENCH_COMMAND="benchmark-run -b llm -p name='${name}',batch_size='$BS' --dtype ${DTYPE} --benchmark_desc ${name}_bs${BS}each4 --host ${HOST} -c ${COMPILER} --skip_verification"
+					numactl -m 0 --physcpubind=0-3 $BENCH_COMMAND &
 					numactl -m 0 --physcpubind=4-7 $BENCH_COMMAND &
 					numactl -m 0 --physcpubind=8-11 $BENCH_COMMAND &
 					numactl -m 0 --physcpubind=12-15 $BENCH_COMMAND &
@@ -54,6 +62,12 @@ do
 					numactl -m 0 --physcpubind=20-23 $BENCH_COMMAND &
 					numactl -m 0 --physcpubind=24-27 $BENCH_COMMAND &
 					numactl -m 0 --physcpubind=28-31 $BENCH_COMMAND &
+					numactl -m 0 --physcpubind=32-35 $BENCH_COMMAND &
+					numactl -m 0 --physcpubind=36-39 $BENCH_COMMAND &
+					numactl -m 0 --physcpubind=40-43 $BENCH_COMMAND &
+					numactl -m 0 --physcpubind=44-47 $BENCH_COMMAND &
+					numactl -m 0 --physcpubind=48-51 $BENCH_COMMAND &
+					numactl -m 0 --physcpubind=52-55 $BENCH_COMMAND &
 					wait $(jobs -p)
 					done
 			done
