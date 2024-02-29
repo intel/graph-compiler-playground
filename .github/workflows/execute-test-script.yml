@@ -113,6 +113,9 @@ jobs:
               run: |
                   source ${CONDA}/bin/activate ${{ steps.guess_conda_env.outputs.conda_env }}
 
+                  # We need token to load llama2 from huggingface repo, which is closed
+                  export HF_TOKEN="${{ secrets.HF_TOKEN }}"
+
                   export ONEDNN_VERBOSE=0
                   LABELS='${{ needs.set_up_vars.outputs.runner_labels }}'
                   if [[ ${LABELS} = *glados* ]]; then
@@ -120,8 +123,6 @@ jobs:
                   fi
 
                   export DL_BENCH_ARGS="--host ${{ inputs.runner_type }} --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} ${URL}"
-                  # We need token to load llama2 from huggingface repo, which is closed
-                  export HF_TOKEN="${{ secrets.HF_TOKEN }}"
 
                   # We mainly want to verify our own backend
                   if [[ ${{ inputs.compiler }} != *torch_mlir* ]]; then
