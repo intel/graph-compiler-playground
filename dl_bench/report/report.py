@@ -32,6 +32,7 @@ results_table = Table(
     # Benchmark info
     make_string("benchmark_desc"),
     make_string("benchmark"),
+    Column("batch_size", Integer, nullable=True),
     Column("benchmark_params", JSON, nullable=False),
     # Backend info
     make_string("backend_desc"),
@@ -40,9 +41,13 @@ results_table = Table(
     make_string("compiler"),
     make_string("dtype"),
     # Results
-    Column("warmup_s", Float, nullable=False),
     Column("duration_s", Float, nullable=False),
     Column("samples_per_s", Float, nullable=False),
+    Column("n_items", Integer, nullable=True),
+    Column("p00", Float),
+    Column("p50", Float),
+    Column("p90", Float),
+    Column("p100", Float),
     # This is actually benchmark property
     Column("flops_per_sample", Float, nullable=False),
 )

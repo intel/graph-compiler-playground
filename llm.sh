@@ -18,7 +18,7 @@ do
       echo "Benchmark $NAME"
       echo "Batch size $BS"
       BS_TXT=$(printf "%04d" $BS)
-      benchmark-run -b llm -p "name='${NAME}',batch_size=${BS}" --benchmark_desc "${NAME}_bs${BS_TXT}" --dtype "${DTYPE}" ${DL_BENCH_ARGS} || echo Failed
+      benchmark-run -b llm -p "name='${NAME}'" -bs ${BS} --benchmark_desc "${NAME}_bs${BS_TXT}" --dtype "${DTYPE}" ${DL_BENCH_ARGS} || echo Failed
     done
   done
 done
