@@ -330,7 +330,7 @@ def get_report(fw_times, duration_s, n_items, flops_per_sample):
         "dirty_items_per_s": n_items / duration_s,
         "flops_per_sample": flops_per_sample,
         "n_items": n_items,
-        "p0": np.percentile(fw_times, 0),
+        "p00": np.percentile(fw_times, 0),
         "p50": np.percentile(fw_times, 50),
         "p90": np.percentile(fw_times, 90),
         "p100": max(fw_times),

@@ -42,6 +42,12 @@ def parse_args():
         help="Benchmark to run.",
     )
     parser.add_argument(
+        "-bs",
+        "--batch-size",
+        type=int,
+        help="Batch size",
+    )
+    parser.add_argument(
         "-bd",
         "--benchmark_desc",
         default=None,
@@ -149,6 +155,7 @@ def main():
     if dtype != "float32":
         backend_desc += "_" + str(dtype)
     benchmark_params["dtype"] = dtype
+    benchmark_params["batch_size"] = args.batch_size
 
     backend = Backend(device=device, compiler=compiler, dtype=dtype)
     benchmark = benchmarks_table[benchmark_name](benchmark_params)
@@ -167,6 +174,7 @@ def main():
     report = {
         "tag": args.tag,
         "benchmark": benchmark_name,
+        "batch_size": args.batch_size,
         "benchmark_desc": benchmark_desc,
         "benchmark_params": benchmark_params,
         "backend_desc": backend_desc,
@@ -175,8 +183,17 @@ def main():
         "compiler": compiler,
         "dtype": dtype,
         **{
-            c: results.get(c, 0)
-            for c in ["warmup_s", "duration_s", "samples_per_s", "flops_per_sample"]
+            c: results[c]
+            for c in [
+                "duration_s",
+                "samples_per_s",
+                "flops_per_sample",
+                "n_items",
+                "p00",
+                "p50",
+                "p90",
+                "p100",
+            ]
         },
     }
 
