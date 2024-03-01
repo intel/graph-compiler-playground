@@ -10,7 +10,7 @@ if [[ -z "${DL_BENCH_ARGS}" ]]; then
 fi
 
 CNNS=(vgg16 resnet18 resnet50 resnext50 resnext101 densenet121 mobilenet_v3l)
-for DTYPE in float32 bfloat16
+for DTYPE in int8 float32 bfloat16
 do
   for BS in 1 32 128
   do

@@ -10,7 +10,7 @@ if [[ -z "${DL_BENCH_ARGS}" ]]; then
 fi
 
 # for size in size5_bn_gelu
-for DTYPE in float32 bfloat16
+for DTYPE in int8 float32 bfloat16
 do
   echo "DTYPE=${DTYPE}"
   for size in size2 size3 size4 size5 size5_sigm size5_tanh size5_gelu size5_linear size5_inplace size5_bn size5_bn_gelu size5_drop_gelu 100@512 25@1024 4@16384 2@16384
