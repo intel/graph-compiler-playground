@@ -101,6 +101,7 @@ def parse_args():
         choices=[
             "float32",
             "bfloat16",
+            "int8",
         ],
         help="Dtype for computations.",
     )
