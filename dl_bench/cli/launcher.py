@@ -75,7 +75,7 @@ def parse_args():
         "-d",
         "--device",
         default="cpu",
-        choices=["cpu", "xpu", "cuda", "openvino-cpu", "openvino-gpu"],
+        choices=["cpu", "xpu", "cuda", "openvino-cpu", "openvino-gpu", "hpu"],
         help="Device to use for benchmark.",
     )
     parser.add_argument(

@@ -117,7 +117,9 @@ class Backend:
         self.dtype = str_to_dtype(dtype)
 
     def to_device(self, x: torch.Tensor):
-        if self.device_name in ("cuda", "xpu"):
+        if self.device_name in ("cuda", "xpu", "hpu"):
+            import habana_frameworks.torch.core as htcore
+
             return x.to(self.device)
         elif self.device_name == "cpu":
             return x
@@ -127,6 +129,10 @@ class Backend:
     def sync(self):
         if self.device_name == "cuda":
             torch.cuda.synchronize()
+        elif self.device_name == "hpu":
+            import habana_frameworks.torch.core as htcore
+
+            htcore.mark_step()
 
     def prepare_eval_transformer(self, model):
         model = model.to(memory_format=torch.channels_last)
@@ -309,10 +315,10 @@ class Backend:
     @staticmethod
     def _get_device(device_name):
         device_name = device_name.lower()
-        # TODO: do we really need this import?
         if device_name == "xpu":
             return "xpu"
-        if device_name in ("cpu", "xpu", "cuda"):
+        if device_name in ("cpu", "xpu", "cuda", "hpu"):
+            import habana_frameworks.torch.core as htcore
             device = torch.device(device_name)
             return device
         elif device_name == "openvino-cpu" or device_name == "openvino-gpu":
