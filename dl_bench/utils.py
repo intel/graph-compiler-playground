@@ -117,7 +117,9 @@ class Backend:
         self.dtype = str_to_dtype(dtype)
 
     def to_device(self, x: torch.Tensor):
-        if self.device_name in ("cuda", "xpu", "hpu"):
+        if self.device_name in ("cuda", "xpu"):
+            return x.to(self.device)
+        elif self.device_name == "hpu":
             import habana_frameworks.torch.core as htcore
 
             return x.to(self.device)
@@ -131,6 +133,9 @@ class Backend:
             torch.cuda.synchronize()
         elif self.device_name == "hpu":
             import habana_frameworks.torch.core as htcore
+            import habana_frameworks.torch as ht
+
+            ht.hpu.synchronize()
 
             htcore.mark_step()
 
@@ -333,7 +338,7 @@ def get_report(fw_times, duration_s, n_items, flops_per_sample):
     return {
         "duration_s": duration_s,
         "samples_per_s": n_items / sum(fw_times),
-        "dirty_items_per_s": n_items / duration_s,
+        "samples_per_s_dirty": n_items / duration_s,
         "flops_per_sample": flops_per_sample,
         "n_items": n_items,
         "p00": np.percentile(fw_times, 0),
