@@ -43,6 +43,7 @@ results_table = Table(
     # Results
     Column("duration_s", Float, nullable=False),
     Column("samples_per_s", Float, nullable=False),
+    Column("samples_per_s_dirty", Float, nullable=True),
     Column("n_items", Integer, nullable=True),
     Column("p00", Float),
     Column("p50", Float),
