@@ -160,7 +160,7 @@ class Backend:
             import intel_extension_for_pytorch as ipex
 
             params = {} if dtype != torch.bfloat16 else {"dtype": torch.bfloat16}
-            #compiled_model = ipex.llm.optimize(model, **params, inplace=True, deployment_mode=True)
+            # compiled_model = ipex.llm.optimize(model, **params, inplace=True, deployment_mode=True)
             compiled_model = ipex.llm.optimize(model, **params)
             # compiled_model = ipex.optimize_transformers(model, **params)
             print("Compiled with ipex")
@@ -327,7 +327,7 @@ def get_report(fw_times, duration_s, n_items, flops_per_sample):
     return {
         "duration_s": duration_s,
         "samples_per_s": n_items / sum(fw_times),
-        "dirty_items_per_s": n_items / duration_s,
+        "samples_per_s_dirty": n_items / duration_s,
         "flops_per_sample": flops_per_sample,
         "n_items": n_items,
         "p00": np.percentile(fw_times, 0),
