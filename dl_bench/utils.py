@@ -171,7 +171,7 @@ class Backend:
             import intel_extension_for_pytorch as ipex
 
             params = {} if dtype != torch.bfloat16 else {"dtype": torch.bfloat16}
-            #compiled_model = ipex.llm.optimize(model, **params, inplace=True, deployment_mode=True)
+            # compiled_model = ipex.llm.optimize(model, **params, inplace=True, deployment_mode=True)
             compiled_model = ipex.llm.optimize(model, **params)
             # compiled_model = ipex.optimize_transformers(model, **params)
             print("Compiled with ipex")
