@@ -323,10 +323,12 @@ class Backend:
         device_name = device_name.lower()
         if device_name == "xpu":
             return "xpu"
-        if device_name in ("cpu", "xpu", "cuda", "hpu"):
+        elif device_name in ("cpu", "xpu", "cuda", "hpu"):
+            return torch.device(device_name)
+        elif device_name == "hpu":
             import habana_frameworks.torch.core as htcore
-            device = torch.device(device_name)
-            return device
+
+            return torch.device(device_name)
         elif device_name == "openvino-cpu" or device_name == "openvino-gpu":
             from torch_ort import ORTInferenceModule, OpenVINOProviderOptions
 
