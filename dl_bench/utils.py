@@ -171,7 +171,7 @@ class Backend:
         elif compile_mode == "ipex":
             import intel_extension_for_pytorch as ipex
 
-            params = {} if dtype != torch.bfloat16 else {"dtype": torch.bfloat16}
+            params = {} if dtype == torch.float32 else {"dtype": dtype}
             # compiled_model = ipex.llm.optimize(model, **params, inplace=True, deployment_mode=True)
             compiled_model = ipex.llm.optimize(model, **params)
             # compiled_model = ipex.optimize_transformers(model, **params)
@@ -223,7 +223,7 @@ class Backend:
         elif compile_mode == "ipex":
             import intel_extension_for_pytorch as ipex
 
-            params = {} if dtype != torch.bfloat16 else {"dtype": torch.bfloat16}
+            params = {} if dtype == torch.float32 else {"dtype": dtype}
             compiled_model = ipex.optimize(model, sample_input=sample_input, **params)
             print("Compiled with ipex")
         elif compile_mode == "ipex_onednn_graph":
