@@ -13,9 +13,10 @@ from dl_bench.tools.compare_tensors import compare
 
 
 def fixed_compare(ref, outputs):
-    ref_cpu = [x.to('cpu') for x in ref]
-    outputs_cpu = [x.to('cpu') for x in outputs]
+    ref_cpu = [x.to("cpu") for x in ref]
+    outputs_cpu = [x.to("cpu") for x in outputs]
     return compare(ref_cpu, outputs_cpu)
+
 
 benchmarks_table = {
     "mlp_oneiter": MlpBasicBenchmark,
@@ -163,6 +164,9 @@ def main():
         backend_desc += "_" + str(dtype)
     benchmark_params["dtype"] = dtype
     benchmark_params["batch_size"] = args.batch_size
+
+    if dtype == "int8" and compiler != "ipex_onednn_graph":
+        raise ValueError("dype=int8 is only supported for ipex_onednn_graph compiler")
 
     backend = Backend(device=device, compiler=compiler, dtype=dtype)
     benchmark = benchmarks_table[benchmark_name](benchmark_params)
