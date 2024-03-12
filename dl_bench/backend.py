@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 import torch
 from torch.nn import Module
