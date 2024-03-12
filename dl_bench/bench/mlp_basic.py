@@ -5,7 +5,7 @@ from torch.nn import Module, Linear
 import torch.nn.functional as F
 
 from dl_bench.utils import Benchmark
-from dl_bench.mlp import RandomInfDataset
+from dl_bench.bench.mlp import RandomInfDataset
 from typing import List
 
 

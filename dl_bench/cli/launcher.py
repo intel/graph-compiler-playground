@@ -3,10 +3,10 @@ import pprint
 import json
 from ast import literal_eval
 
-from dl_bench.mlp import MlpBenchmark
-from dl_bench.cnn import CnnBenchmark
-from dl_bench.llm import LlmBenchmark
-from dl_bench.mlp_basic import MlpBasicBenchmark
+from dl_bench.bench.mlp import MlpBenchmark
+from dl_bench.bench.cnn import CnnBenchmark
+from dl_bench.bench.llm import LlmBenchmark
+from dl_bench.bench.mlp_basic import MlpBasicBenchmark
 from dl_bench.report.report import BenchmarkDb
 from dl_bench.utils import Backend
 from dl_bench.tools.compare_tensors import compare
