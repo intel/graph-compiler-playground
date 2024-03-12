@@ -140,8 +140,9 @@ class Backend:
             htcore.mark_step()
 
     def prepare_eval_transformer(self, model):
-        model = model.to(memory_format=torch.channels_last)
+        # model = model.to(memory_format=torch.channels_last)
 
+        model.eval()
         model.to(self.device)
         with torch.no_grad():
             model.eval()
