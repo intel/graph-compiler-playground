@@ -323,7 +323,7 @@ class Backend:
         device_name = device_name.lower()
         if device_name == "xpu":
             return "xpu"
-        elif device_name in ("cpu", "xpu", "cuda", "hpu"):
+        elif device_name in ("cpu", "xpu", "cuda"):
             return torch.device(device_name)
         elif device_name == "hpu":
             import habana_frameworks.torch.core as htcore
