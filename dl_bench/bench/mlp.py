@@ -3,7 +3,7 @@ from typing import List
 import torch
 import torch.nn as nn
 
-from dl_bench.utils import Benchmark, RandomInfDataset
+from dl_bench.benchmark import Benchmark, RandomInfDataset
 
 
 size2_struct = [512, 1024, 2048, 512]
