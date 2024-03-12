@@ -136,7 +136,8 @@ jobs:
                   echo "CPU cores configured: $OMP_NUM_THREADS"
                   if [[ ${LABELS} = *glados* ]]; then
                       export HF_HOME="/cache/torchmlir/huggingface_cache"
-                      numactl -N 1 ${{ inputs.test_script }}
+                      
+                      numactl -m 0 --physcpubind=0-31 ${{ inputs.test_script }}
                   else
                       export HF_HOME="/data/torchmlir/huggingface_cache"
                       source ${{ inputs.test_script}}

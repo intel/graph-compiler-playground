@@ -31,7 +31,7 @@ def get_llm(name, dtype):
     model_name, M, T = name2params[name]
 
     model = M.from_pretrained(model_name, torch_dtype=dtype, **kwargs)
-    tokenizer = T.from_pretrained(model_name)
+    tokenizer = T.from_pretrained(model_name, **kwargs)
     return tokenizer, model
 
 

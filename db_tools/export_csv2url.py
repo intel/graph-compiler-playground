@@ -19,7 +19,7 @@ def parse_args():
         help="Name of the host machine",
     )
     # Reporting
-    parser.add_argument("-t", "--tag", default="", help="Tag to mark this result in DB")
+    parser.add_argument("-t", "--tag", default=None, help="Tag to mark this result in DB")
     parser.add_argument(
         "-u",
         "--url",
@@ -33,6 +33,9 @@ def main():
     df = pd.read_csv(args.path)
     if args.host is not None:
         df['host'] = args.host
+
+    if args.tag is not None:
+        df['tag'] = args.tag
 
     db = args.url and BenchmarkDb(args.url)
 

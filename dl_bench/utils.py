@@ -119,6 +119,10 @@ class Backend:
     def to_device(self, x: torch.Tensor):
         if self.device_name in ("cuda", "xpu"):
             return x.to(self.device)
+        elif self.device_name == "hpu":
+            import habana_frameworks.torch.core as htcore
+
+            return x.to(self.device)
         elif self.device_name == "cpu":
             return x
         else:
@@ -127,10 +131,18 @@ class Backend:
     def sync(self):
         if self.device_name == "cuda":
             torch.cuda.synchronize()
+        elif self.device_name == "hpu":
+            import habana_frameworks.torch.core as htcore
+            import habana_frameworks.torch as ht
+
+            ht.hpu.synchronize()
+
+            htcore.mark_step()
 
     def prepare_eval_transformer(self, model):
-        model = model.to(memory_format=torch.channels_last)
+        # model = model.to(memory_format=torch.channels_last)
 
+        model.eval()
         model.to(self.device)
         with torch.no_grad():
             model.eval()
@@ -309,12 +321,14 @@ class Backend:
     @staticmethod
     def _get_device(device_name):
         device_name = device_name.lower()
-        # TODO: do we really need this import?
         if device_name == "xpu":
             return "xpu"
-        if device_name in ("cpu", "xpu", "cuda"):
-            device = torch.device(device_name)
-            return device
+        elif device_name in ("cpu", "xpu", "cuda"):
+            return torch.device(device_name)
+        elif device_name == "hpu":
+            import habana_frameworks.torch.core as htcore
+
+            return torch.device(device_name)
         elif device_name == "openvino-cpu" or device_name == "openvino-gpu":
             from torch_ort import ORTInferenceModule, OpenVINOProviderOptions
 
@@ -327,7 +341,7 @@ def get_report(fw_times, duration_s, n_items, flops_per_sample):
     return {
         "duration_s": duration_s,
         "samples_per_s": n_items / sum(fw_times),
-        "dirty_items_per_s": n_items / duration_s,
+        "samples_per_s_dirty": n_items / duration_s,
         "flops_per_sample": flops_per_sample,
         "n_items": n_items,
         "p00": np.percentile(fw_times, 0),

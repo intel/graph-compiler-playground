@@ -11,6 +11,12 @@ from dl_bench.report.report import BenchmarkDb
 from dl_bench.utils import Backend
 from dl_bench.tools.compare_tensors import compare
 
+
+def fixed_compare(ref, outputs):
+    ref_cpu = [x.to('cpu') for x in ref]
+    outputs_cpu = [x.to('cpu') for x in outputs]
+    return compare(ref_cpu, outputs_cpu)
+
 benchmarks_table = {
     "mlp_oneiter": MlpBasicBenchmark,
     "mlp": MlpBenchmark,
@@ -75,7 +81,7 @@ def parse_args():
         "-d",
         "--device",
         default="cpu",
-        choices=["cpu", "xpu", "cuda", "openvino-cpu", "openvino-gpu"],
+        choices=["cpu", "xpu", "cuda", "openvino-cpu", "openvino-gpu", "hpu"],
         help="Device to use for benchmark.",
     )
     parser.add_argument(
@@ -168,7 +174,7 @@ def main():
         _, ref_outputs = benchmark.inference(reference_backend)
         results, outputs = benchmark.inference(backend)
         outputs, ref_outputs = fix_lengths(outputs, ref_outputs)
-        cmp_res = compare(outputs, ref_outputs)
+        cmp_res = fixed_compare(outputs, ref_outputs)
 
     print(f"Benchmark {benchmark_name} completed")
 
@@ -188,6 +194,7 @@ def main():
             for c in [
                 "duration_s",
                 "samples_per_s",
+                "samples_per_s_dirty",
                 "flops_per_sample",
                 "n_items",
                 "p00",
@@ -210,7 +217,6 @@ def main():
         )
     )
     pprint.pprint(report)
-    pprint.pprint(results)
 
     if args.output is not None:
         with open(args.output, "w", encoding="UTF-8") as out:

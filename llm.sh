@@ -11,9 +11,9 @@ fi
 
 for NAME in llama2-7b llama2-13b gptj
 do
-  for BS in 1 4
+  for BS in 1 4 8
   do
-    for DTYPE in int8 float32 bfloat16
+    for DTYPE in int8 bfloat16
     do
       echo "Benchmark $NAME"
       echo "Batch size $BS"
