@@ -1,12 +1,10 @@
-import time
+from typing import List
 
 import torch
 from torch.nn import Module, Linear
 import torch.nn.functional as F
 
-from dl_bench.utils import Benchmark
-from dl_bench.bench.mlp import RandomInfDataset
-from typing import List
+from dl_bench.benchmark import Benchmark, RandomInfDataset
 
 
 class MLP(Module):
@@ -48,7 +46,7 @@ class MlpBasicBenchmark(Benchmark):
 
 
 def train(model: Module, device):
-    from tools import train, validate_accuracy
+    from dl_bench.tools import train, validate_accuracy
 
     epochs = 2
 

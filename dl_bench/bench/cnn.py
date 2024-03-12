@@ -1,4 +1,4 @@
-from dl_bench.utils import Benchmark, RandomInfDataset
+from dl_bench.benchmark import Benchmark, RandomInfDataset
 
 
 def get_cnn(name):
@@ -43,5 +43,11 @@ class CnnBenchmark(Benchmark):
         net = get_cnn(name=name)
 
         super().__init__(
-            net=net, in_shape=in_shape, dataset=dataset, batch_size=batch_size, min_batches=min_batches, warmup_batches=warmup, min_seconds=min_seconds
+            net=net,
+            in_shape=in_shape,
+            dataset=dataset,
+            batch_size=batch_size,
+            min_batches=min_batches,
+            warmup_batches=warmup,
+            min_seconds=min_seconds,
         )

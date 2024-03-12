@@ -3,7 +3,6 @@ import time
 import math
 
 import torch
-import numpy as np
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -11,7 +10,8 @@ from transformers import (
     LlamaTokenizer,
 )
 
-from dl_bench.utils import Benchmark, get_report, get_time, str_to_dtype
+from dl_bench.benchmark import Benchmark, get_report, get_time
+from dl_bench.backend import str_to_dtype
 
 
 def get_llm(name, dtype):
@@ -80,7 +80,6 @@ class LlmBenchmark(Benchmark):
         n_items = 0
         outputs = []
         fw_times = []
-
 
         # Ipex gives error with eval, other backends have no effect
         # self.model.eval()
