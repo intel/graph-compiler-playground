@@ -122,11 +122,13 @@ jobs:
                       URL="--url ${{ secrets.DB_URL }}"
                   fi
 
-                  export DL_BENCH_ARGS="--host ${{ inputs.runner_type }} --compiler ${{ inputs.compiler }} --device ${{ inputs.device }} --tag ${{ inputs.tag }} ${URL}"
+                  export COMPILER="${{ inputs.compiler }}"
+                  export DEVICE="${{ inputs.device }}"
+                  export OTHER_ARGS="--host ${{ inputs.runner_type }} --tag ${{ inputs.tag }} ${URL}"
 
                   # We mainly want to verify our own backend
                   if [[ ${{ inputs.compiler }} != *torch_mlir* ]]; then
-                    DL_BENCH_ARGS="${DL_BENCH_ARGS} --skip_verification"
+                    OTHER_ARGS="${OTHER_ARGS} --skip_verification"
                   fi
 
                   # HOST CONFIG
