@@ -35,7 +35,7 @@ run_benchmark_suit() {
                 echo "Benchmark $NAME with BS=$BS and DTYPE=$DTYPE"
                 BS_TXT=$(printf "%04d" $BS)
 
-                CMD="benchmark-run -c ${COMPILER} -d ${DEVICE} -b ${BENCHMARK} -p \"name='${NAME}'\" --dtype \"${DTYPE}\" -bs $BS --benchmark_desc \"${NAME}_bs${BS_TXT}\" ${OTHER_ARGS}"
+                CMD="benchmark-run -c ${COMPILER} -d ${DEVICE} -b ${BENCHMARK} -p \"name='${NAME}'\" --dtype ${DTYPE} -bs $BS --benchmark_desc ${NAME}_bs${BS_TXT} ${OTHER_ARGS}"
                 $CMD || failed_commands+=("$CMD")
             done
         done
