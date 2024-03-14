@@ -26,6 +26,8 @@ run_benchmark_suit() {
     BSs="$3"
     NAMEs="$4"
 
+    echo "Running suit for benchmark=\"$BENCHMARK\" DTYPEs=\"$DTYPEs\" BSs=\"$BSs\" NAMEs=\"$NAMEs\""
+
     for DTYPE in $DTYPEs
     do
         for BS in $BSs
