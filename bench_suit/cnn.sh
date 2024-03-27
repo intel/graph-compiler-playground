@@ -2,7 +2,7 @@
 
 . "$(dirname "$0")/common.sh"
 
-DTYPEs="float32 bfloat16"
+DTYPEs="float32"
 if [ "$COMPILER" = 'ipex_onednn_graph' ]; then
     DTYPEs="$DTYPEs int8"
 fi
